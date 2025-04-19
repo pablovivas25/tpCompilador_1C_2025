@@ -28,7 +28,8 @@ extern int yylineno;
 %token <strVal>ID
 %token BOOL
 %token OP_AS
-%token OP_AS_OPERACION
+%token OP_AS_OPE_ARIT
+%token OP_AS_NEG_CALC
 %token OP_SUM
 %token OP_MUL
 %token OP_RES
@@ -73,31 +74,23 @@ extern int yylineno;
 
 programa:
     sentencia
-    |programa sentencia;
+    | programa sentencia;
 
 sentencia: 
-    declaracion_init
-    |read
-    |write
-    |while
-    |if
-    |asignacion
-    |funcion_reorder;
-    
-funcion_reorder:     
-    REORDER PA CA lista_expresiones CC COMA BOOL COMA CTE PC {printf("Sintactico --> funcion reorder\n");};
+    declaracion
+    | read
+    | write
+    | while
+    | if
+    | asignacion
+    | asignacion_operacion_aritmetica
+    | asignacion_negativeCalculation
+    | funcion_reorder;
 
-lista_expresiones:
-    lista_expresiones expresion
-    |expresion;
+declaracion:
+    declaracion_init {printf("Bloque declaracion INIT\n");};
 
-asignacion: 
-    ID OP_AS expresion {printf("ID = Expresion es ASIGNACION\n");};
-
-declaracion_init:
-    declaracion {printf("Bloque declaracion INIT\n");};
-
-declaracion: 
+declaracion_init: 
     INIT LA lista_declaracion LC {
         char dataType[100];
         char variable[100];
@@ -115,65 +108,88 @@ declaracion:
 
 lista_declaracion: 
     lista_declaracion lista_id DOS_PUNTOS tipo {pushStack(&pilaVariables,"*");}
-    |lista_id DOS_PUNTOS tipo {pushStack(&pilaVariables,"*");};
+    | lista_id DOS_PUNTOS tipo {pushStack(&pilaVariables,"*");};
 
 lista_id:
     lista_id COMA ID {pushStack(&pilaVariables,$3);}
-    |ID {pushStack(&pilaVariables,$1);};
+    | ID {pushStack(&pilaVariables,$1);};
 
 tipo: 
     INT       {pushStack(&pilaTipoDatoVariable, "INTEGER");}
-    |FLOAT    {pushStack(&pilaTipoDatoVariable, "FLOAT");}	
-    |STRING   {pushStack(&pilaTipoDatoVariable, "STRING");};
+    | FLOAT    {pushStack(&pilaTipoDatoVariable, "FLOAT");}	
+    | STRING   {pushStack(&pilaTipoDatoVariable, "STRING");};
 
 read:
     READ PA ID PC {printf("Sintactico --> READ\n");};
 
 write:
     WRITE PA ID PC {printf("Sintactico --> WRITE\n");}
-    |WRITE PA CONST_STRING PC {printf("Sintactico --> WRITE\n");};
+    | WRITE PA CONST_STRING PC {printf("Sintactico --> WRITE\n");};
 
-while: 
+while:
     WHILE PA condicion PC LA programa LC {printf("Sintactico --> WHILE\n");};
 
 if:
     IF PA condicion PC LA programa LC {printf("Sintactico --> IF\n");}
-    |IF PA condicion PC LA programa LC ELSE LA programa LC {printf("Sintactico --> IF\n");};
+    | IF PA condicion PC LA programa LC ELSE LA programa LC {printf("Sintactico --> IF\n");};
 
 condicion:
     comparacion
-    |condicion AND comparacion
-    |condicion OR comparacion;
-    |NOT comparacion;
+    | condicion AND comparacion
+    | condicion OR comparacion
+    | NOT comparacion;
 
 comparacion:
     expresion comparador expresion;
 
 comparador:
     OP_MEN
-    |OP_MAY
-    |OP_COMP
-    |OP_MEN_IGU
-    |OP_MAY_IGU;
+    | OP_MAY
+    | OP_COMP
+    | OP_MEN_IGU
+    | OP_MAY_IGU;
 
 expresion:
     termino {printf("Termino es Expresion\n");}
-    |expresion OP_SUM termino {printf("Expresion + Termino es Expresion\n");}
-    |expresion OP_RES termino {printf("Expresion - Termino es Expresion\n");};
+    | expresion OP_SUM termino {printf("Expresion + Termino es Expresion\n");}
+    | expresion OP_RES termino {printf("Expresion - Termino es Expresion\n");};
 
-termino: 
+termino:
     factor {printf("Factor es Termino\n");}
-    |termino OP_MUL factor {printf("Termino * Factor es Termino\n");}
-    |termino OP_DIV factor {printf("Termino / Factor es Termino\n");};
+    | PA expresion PC {printf("Expresion entre parentesis es Factor\n");}
+    | termino OP_MUL factor {printf("Termino * Factor es Termino\n");}
+    | termino OP_DIV factor {printf("Termino / Factor es Termino\n");};
 
 factor: 
-    ID               {printf("ID es Factor \n");}
-    |CTE             {printf("CTE es Factor\n"); insertNumber(&listaTS,$1);}
-    |CONST_REAL      {printf("CTE_R es Factor\n"); insertNumber(&listaTS,$1);}
-    |CONST_STRING    {printf("CTE_S es Factor\n"); insertString(&listaTS, $1);}
-    |PA expresion PC {printf("Expresion entre parentesis es Factor\n");};
+    ID                {printf("ID es Factor \n");}
+    | CTE             {printf("CTE es Factor\n"); insertNumber(&listaTS,$1);}
+    | CONST_REAL      {printf("CTE_R es Factor\n"); insertNumber(&listaTS,$1);}
+    | CONST_STRING    {printf("CTE_S es Factor\n"); insertString(&listaTS, $1);};
+    
+asignacion:
+    ID OP_AS factor {printf("ID = factor es ASIGNACION\n");};
 
+asignacion_operacion_aritmetica:
+    ID OP_AS_OPE_ARIT expresion {printf("ID =: expresion es ASIGNACION\n");}; //revisar este printf -> quizás haya que generar un paso extra
 
+asignacion_negativeCalculation:
+    ID OP_AS_NEG_CALC NEGATIVECALCULATION PA lista_params PC {printf("Sintactico --> funcion negativeCalculation\n");}; //revisar este printf -> quizás haya que generar un paso extra
+
+lista_params:
+    lista_params COMA CTE
+    | lista_params COMA CONST_REAL
+    | lista_params COMA ID
+    | CTE
+    | CONST_REAL
+    | ID;
+
+funcion_reorder:     
+    REORDER PA CA lista_expresiones CC COMA BOOL COMA CTE PC {printf("Sintactico --> funcion reorder\n");};
+
+lista_expresiones:
+    lista_expresiones COMA expresion
+    | expresion;
+    
 %%
 
 
@@ -181,7 +197,8 @@ int main(int argc, char *argv[])
 {
     if((yyin = fopen(argv[1], "rt"))==NULL)
     {
-        printf("\nNo se puede abrir el archivo de prueba: %s\n", argv[1]);    
+        printf("\nNo se puede abrir el archivo de prueba: %s\n", argv[1]);
+        exit (1);
     }
 
     printf("\nINICIO DE COMPILACION\n");

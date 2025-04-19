@@ -22,17 +22,17 @@ int yyerror(void);
 %option noyywrap  
 %option yylineno
 
-
 DIGITO			[0-9]
 LETRA			[a-zA-Z]
 BOOL            "true"|"false"
-CTE		        {DIGITO}+
+CTE		        -?{DIGITO}+
 CARACTER        [a-z|A-Z|0-9|=|OP_MAY|OP_MEN|!|:|'|"|+|\-|*|/|@|.|%|?]
-CONST_REAL      {DIGITO}+"."{DIGITO}+|{DIGITO}+"."|"."{DIGITO}+
+CONST_REAL      -?({DIGITO}+"."{DIGITO}+|{DIGITO}+"."|"."{DIGITO}+)
 CONST_STRING    {COMILLA}({CARACTER}+|" ")*{COMILLA}
 ID			    {LETRA}({LETRA}|{DIGITO})*
 OP_AS   		":="
-OP_AS_OPERACION "=:"
+OP_AS_OPE_ARIT  "=:"
+OP_AS_NEG_CALC  "="
 OP_SUM		    "+"
 OP_MUL          "*"
 OP_RES		    "-"
@@ -47,28 +47,28 @@ COMILLA         ["]
 DOS_PUNTOS      [:]
 PYC             ";"
 COMA            [,]
-COMENTARIO_A    "#""+"
-COMENTARIO_I    {COMENTARIO_A}({CARACTER}|" ")*{COMENTARIO_C}
-COMENTARIO_C    "+""#"
+COMENTARIO_A    "#+"
+COMENTARIO_I    {COMENTARIO_A}({CARACTER}|[^+#]|" ")*{COMENTARIO_C}
+COMENTARIO_C    "+#"
 WHILE           "while"|"WHILE"
 IF              "IF"|"If"|"if"
 ELSE            "else"|"ELSE"|"Else"
-INT             "int"|"INT"
-FLOAT           "float"|"FLOAT"
-STRING          "string"|"STRING"
+INT             "int"|"INT"|"Int"
+FLOAT           "float"|"FLOAT"|"Float"
+STRING          "string"|"STRING"|"String"
 INIT            "init"|"INIT"
-READ            "read"|"READ"
-WRITE           "write"|"WRITE"
+READ            "read"|"READ"|"Read"
+WRITE           "write"|"WRITE"|"Write"
 AND             "AND"|"and"
 OR              "OR"|"or"
 NOT             "not"|"NOT"
 OP_MEN          "<"
 OP_MAY          ">"
 OP_COMP         "=="
-OP_MEN_IGU      {OP_MEN}{=}
-OP_MAY_IGU      {OP_MAY}{=}
+OP_MEN_IGU      {OP_MEN}"="
+OP_MAY_IGU      {OP_MAY}"="
 
-REORDER					"REORDER"|"reoder"
+REORDER					"REORDER"|"reorder"
 NEGATIVECALCULATION		"NEGATIVECALCULATION"|"negativeCalculation"
 
 %%
@@ -78,7 +78,8 @@ NEGATIVECALCULATION		"NEGATIVECALCULATION"|"negativeCalculation"
 {STRING}            {printf("\nLexico --> String: %s\n", yytext);return STRING;}
 {OP_SUM}		    {printf("\nLexico --> Suma: %s\n", yytext);return OP_SUM;}
 {OP_AS}			    {printf("\nLexico --> Asignacion: %s\n", yytext);return OP_AS;}
-{OP_AS_OPERACION}	{printf("\nLexico --> Asignacion operacion: %s\n", yytext);return OP_AS_OPERACION;}
+{OP_AS_OPE_ARIT}	{printf("\nLexico --> Asignacion operacion: %s\n", yytext);return OP_AS_OPE_ARIT;}
+{OP_AS_NEG_CALC}	{printf("\nLexico --> Asignacion negativeCalculation: %s\n", yytext);return OP_AS_NEG_CALC;}
 {OP_MUL}		    {printf("\nLexico --> Multiplicacion: %s\n", yytext);return OP_MUL;}
 {OP_RES}		    {printf("\nLexico --> Resta: %s\n", yytext);return OP_RES;}
 {OP_DIV}		    {printf("\nLexico --> Division: %s\n", yytext);return OP_DIV;}
@@ -100,26 +101,24 @@ NEGATIVECALCULATION		"NEGATIVECALCULATION"|"negativeCalculation"
 {DOS_PUNTOS}        {printf("\nLexico --> Dos Puntos: %s\n", yytext);return DOS_PUNTOS;}
 {COMA}              {printf("\nLexico --> Coma: %s\n", yytext);return COMA;}
 {PYC}               {printf("\nLexico --> Punto y coma: %s\n", yytext);return PYC;}
+{OP_MEN}            {printf("\nLexico --> Operador Menor: %s\n", yytext);return OP_MEN;}
+{OP_MAY}            {printf("\nLexico --> Operador Mayor: %s\n", yytext);return OP_MAY;}
+{OP_COMP}           {printf("\nLexico --> Operador Igual: %s\n", yytext);return OP_COMP;}
+{OP_MEN_IGU}        {printf("\nLexico --> Operador Menor Igual: %s\n", yytext);return OP_MEN_IGU;}
+{OP_MAY_IGU}        {printf("\nLexico --> Operador Mayor Igual: %s\n", yytext);return OP_MAY_IGU;}
+{BOOL}			    {printf("\nLexico --> Valor Boolean: %s\n", yytext);yylval.strVal = strdup(yytext);return BOOL;}
+
+{REORDER}               {printf("\nLexico --> Reorder: %s\n", yytext);return REORDER;}
+{NEGATIVECALCULATION}   {printf("\nLexico --> NegativeCalculation: %s\n", yytext);return NEGATIVECALCULATION;}
 
 {COMENTARIO_A}  {;}
 {COMENTARIO_I}  {;}
 {COMENTARIO_C}  {;}
 
-{OP_MEN}        {printf("\nLexico --> Operador Menor: %s\n", yytext);return OP_MEN;}
-{OP_MAY}        {printf("\nLexico --> Operador Mayor: %s\n", yytext);return OP_MAY;}
-{OP_COMP}       {printf("\nLexico --> Operador Igual: %s\n", yytext);return OP_COMP;}
-{OP_MEN_IGU}    {printf("\nLexico --> Operador Menor Igual: %s\n", yytext);return OP_MEN_IGU;}
-{OP_MAY_IGU}    {printf("\nLexico --> Operador Mayor Igual: %s\n", yytext);return OP_MAY_IGU;}
-
-{REORDER}               {printf("\nLexico --> Reorder: %s\n", yytext);return REORDER;}
-{NEGATIVECALCULATION}   {printf("\nLexico --> NegativeCalculation: %s\n", yytext);return NEGATIVECALCULATION;}
-
-{BOOL}			{printf("\nLexico --> Valor Boolean: %s\n", yytext);yylval.strVal = strdup(yytext);return BOOL;}
-
 {ID}			{printf("\nLexico --> Identificador: %s\n", yytext);yylval.strVal = strdup(yytext);return ID;}
 {CTE}           {printf("\nLexico --> Cte Int: %s\n", yytext);
                     int value = atoi(strdup(yytext));
-                    if( value > MAX_NUM_16_BITS ) {
+                    if( abs(value) > MAX_NUM_16_BITS ) {
                         printf("\nLexico --> El entero supera los limites permitidos. \n");
                         exit(1);
                     } else {
@@ -127,10 +126,9 @@ NEGATIVECALCULATION		"NEGATIVECALCULATION"|"negativeCalculation"
                         return CTE;} }
 
 {CONST_REAL}    {printf("\nLexico --> Constante flotante: %s\n", yytext); 
-
                     double val = atof(yytext);
                     if (val > LIMIT_FLOAT_SUP || val < LIMIT_FLOAT_INF) {
-                        printf("\nLexico --> El real supera los límites permitidos.\n");
+                        printf("\nLexico --> El real supera los limites permitidos.\n");
                         exit(1);
                     } else {
                         yylval.strVal = strdup(yytext);
