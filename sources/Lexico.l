@@ -25,10 +25,10 @@ int yyerror(void);
 DIGITO			[0-9]
 LETRA			[a-zA-Z]
 BOOL            "true"|"false"
-CTE		        -?{DIGITO}+
+CTE_INTEGER		-?{DIGITO}+
 CARACTER        [a-z|A-Z|0-9|=|OP_MAY|OP_MEN|!|:|'|"|+|\-|*|/|@|.|%|?]
-CONST_REAL      -?({DIGITO}+"."{DIGITO}+|{DIGITO}+"."|"."{DIGITO}+)
-CONST_STRING    {COMILLA}({CARACTER}+|" ")*{COMILLA}
+CTE_FLOAT       -?({DIGITO}+"."{DIGITO}+|{DIGITO}+"."|"."{DIGITO}+)
+CTE_STRING      {COMILLA}({CARACTER}+|" ")*{COMILLA}
 ID			    {LETRA}({LETRA}|{DIGITO})*
 OP_AS   		":="
 OP_AS_OPE_ARIT  "=:"
@@ -101,6 +101,27 @@ NEGATIVECALCULATION		"NEGATIVECALCULATION"|"negativeCalculation"
 {DOS_PUNTOS}        {printf("\nLexico --> Dos Puntos: %s\n", yytext);return DOS_PUNTOS;}
 {COMA}              {printf("\nLexico --> Coma: %s\n", yytext);return COMA;}
 {PYC}               {printf("\nLexico --> Punto y coma: %s\n", yytext);return PYC;}
+
+{CTE_INTEGER}       { 
+                        int value = atoi(strdup(yytext));
+                        if( abs(value) > MAX_NUM_16_BITS ) {
+                            printf("\nLexico --> El entero supera los limites permitidos. \n");
+                            exit(1);
+                        } else {
+                            yylval.strVal = strdup(yytext);
+                            return CTE_INTEGER;} }
+
+{CTE_FLOAT}         {printf("\nLexico --> Constante flotante: %s\n", yytext);  
+                        double val = atof(yytext);
+                        if (val > LIMIT_FLOAT_SUP || val < LIMIT_FLOAT_INF) {
+                            printf("\nLexico --> El real supera los limites permitidos.\n");
+                            exit(1);
+                        } else {
+                            yylval.strVal = strdup(yytext);
+                            return CTE_FLOAT;
+                        }
+                    }
+
 {OP_MEN}            {printf("\nLexico --> Operador Menor: %s\n", yytext);return OP_MEN;}
 {OP_MAY}            {printf("\nLexico --> Operador Mayor: %s\n", yytext);return OP_MAY;}
 {OP_COMP}           {printf("\nLexico --> Operador Igual: %s\n", yytext);return OP_COMP;}
@@ -116,33 +137,14 @@ NEGATIVECALCULATION		"NEGATIVECALCULATION"|"negativeCalculation"
 {COMENTARIO_C}  {;}
 
 {ID}			{printf("\nLexico --> Identificador: %s\n", yytext);yylval.strVal = strdup(yytext);return ID;}
-{CTE}           {printf("\nLexico --> Cte Int: %s\n", yytext);
-                    int value = atoi(strdup(yytext));
-                    if( abs(value) > MAX_NUM_16_BITS ) {
-                        printf("\nLexico --> El entero supera los limites permitidos. \n");
-                        exit(1);
-                    } else {
-                        yylval.strVal = strdup(yytext);
-                        return CTE;} }
 
-{CONST_REAL}    {printf("\nLexico --> Constante flotante: %s\n", yytext); 
-                    double val = atof(yytext);
-                    if (val > LIMIT_FLOAT_SUP || val < LIMIT_FLOAT_INF) {
-                        printf("\nLexico --> El real supera los limites permitidos.\n");
-                        exit(1);
-                    } else {
-                        yylval.strVal = strdup(yytext);
-                        return CONST_REAL;
-                    }
-                }
-
-{CONST_STRING}  {printf("\nLexico --> Constante string: %s\n", yytext);
+{CTE_STRING}    {printf("\nLexico --> Constante string: %s\n", yytext);
                     if(strlen(yytext) > MAX_CHARACTERS){
                         printf( "\nLexico --> El string supera los limites permitidos. \n");
                         exit(1);
                     } else {
                         yylval.strVal = strdup(yytext);
-                        return CONST_STRING; }}
+                        return CTE_STRING; }}
 
 {COMILLA}       {printf("\nLexico --> Comilla: %s\n", yytext); return COMILLA;}
 
