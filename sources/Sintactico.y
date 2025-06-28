@@ -464,22 +464,22 @@ funcion_reorder:
         contArgREORDER=0;
         tmpIndex=posicion_polaca_actual();
         apilar_indice(tmpIndex);  
-    } CA lista_expresiones CC 
-    
+    } CA lista_expresiones CC { eliminar_ultimo_de_polaca();}
     COMA BOOL COMA CTE_INTEGER PC 
     { 
         int sentido; //devuelve 1
-        if (strcmp($8,"true")==0) {
+        if (strcmp($9,"true")==0) {
             sentido=1;
-        } else if (strcmp($8,"false")==0) {
+        } else if (strcmp($9,"false")==0) {
             sentido=0;
         } 
 
-        int posPIVOT=atoi($10);
+        int posPIVOT=atoi($11);
         if (posPIVOT>contArgREORDER) {
             printf("ERROR en REORDER: EL posición PIVOT no puede exeder la cantidad de ARGUMENTOS!!!\n ");
             exit(1);
         }
+        //actualizar_elemento_en_polaca(posPIVOT,"FIN REORD");
         reordenar_polaca(posPIVOT, contArgREORDER, sentido);
         printf("Sintactico --> funcion reorder\n");
     };
@@ -492,11 +492,15 @@ lista_expresiones:
         contArgREORDER++; 
         tmpIndex=posicion_polaca_actual();
         apilar_indice(tmpIndex);
+        if(contArgREORDER!=1)
+         insertar_en_polaca(",");
     }
     | expresion 
     { 
         tmpIndex=posicion_polaca_actual();
         apilar_indice(tmpIndex); 
+        if(contArgREORDER!=1)
+          insertar_en_polaca(",");
     };
     
 %%

@@ -54,6 +54,14 @@ int insertar_en_polaca(char *value) {
     rpn->vector_index++;
     return rpn->vector_index;
 }
+void eliminar_ultimo_de_polaca() {
+    if (rpn->vector_index > 0) {
+        rpn->vector_index--;
+        free(rpn->vector_elements[rpn->vector_index]);
+        rpn->vector_elements[rpn->vector_index] = NULL;
+    }
+}
+
 
 int actualizar_polaca(int index, int offset) {
     char jumpPos[4];
