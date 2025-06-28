@@ -22,9 +22,9 @@ int insertNumber(tList *p, char *lex)
     strcat(name, lex); 
 
     if(strrchr (lex, '.')) {
-        result = insertOrder(p, name, "FLOAT", lex, strlen(lex));
+        result = insertOrder(p, name, "CTE_FLOAT", lex, 0);
     }
-    result = insertOrder(p, name, "INT", lex, strlen(lex));
+    result = insertOrder(p, name, "CTE_INT", lex, 0);
 
     if(result == DUPLICATE){
         //printf("Lexema %s ya se ingreso en la tabla de simbolos\n",lex);
@@ -44,7 +44,7 @@ int insertString(tList *p, char *lex)
     strcpy(name, "_");
     strcat(name, newName);
 
-    result = insertOrder(p, name, "STRING", newName, strlen(newName));
+    result = insertOrder(p, name, "CTE_STRING", newName, strlen(newName));
 
     if(result == DUPLICATE){
         //printf("Lexema %s ya se ingreso en la tabla de simbolos\n",lex);
