@@ -1,66 +1,65 @@
 #+ Declaracion +#
 
 init {
-    a, a1, b1 : Float
-    variable1 : Int
+    a, a1, b1, x1, z, f: Float
+    variable1, d, c, x, r, j: Int
     b, p1, p2, p3 : String
 }
 
 #+ asginaciones +#
 a := 99999.99
 a := 99.
-a := .9999
+a1 := .9999
 
 b := "@sdADaSjfla%dfg"
 b := "asldk  fh sjf"
 
 #+ condiciones +#
-if (a > b)
+if (a > a1)
 {
-    write("a es mas grande que b")
+    write("a es mas grande que a1")
 }
 else
 {
-    write("a es mas chico o igual a b")
+    write("a es mas chico o igual a a1")
 }
 
 #+ Ejemplo AND +#
-a := 1
-b := 1
+variable1 := 1
+d := 1
 c := 2
 
-if (a > b AND c > b)
+if (variable1 > d AND c > d)
 {
-    write("a es mas grande que b y c es mas grande que b")
+    write("variable1 es mas grande que d y c es mas grande que d")
 }
 
 #+ Ejemplo OR +#
-a := 1
-b := 1
+variable1 := 3
+d := 1
 c := 2
 
-if (a > b OR c > b)
+if (variable1 > d OR c > d)
 {
-    write("a es mas grande que b o c es mas grande que b")
+    write("variable1 es mas grande que d o c es mas grande que d")
 }
 
 #+ Ejemplo NOT +#
-a := 1
-b := 1
+d := 1
 c := 2
 
-if (NOT a > b)
+if (NOT d > c)
 {
-    write("a no es mas grande que b. check NOT")
+    write("d no es mas grande que c. check NOT")
 }
 
 #+ ciclo +#
-a := 1
-b := 3
+c := 3
+d := 1
 
-while (a > b)
+while (c > d)
 {
-    write("a es mas grande que b")
+    write("c es mas grande que d")
     a =: a + 1
 }
 
@@ -76,7 +75,7 @@ write(variable1)  #+ var1 es una variable numerica definida previamente +#
 x =: 27 - c
 x =: r + 500
 x =: 34 * 3
-x =: z / f
+x1 =: z / f
 x =: r * j - 2
 
 
@@ -90,14 +89,14 @@ reorder([r * j - 2, x + 3, 1 + 1, 9 - x], false,2)  #+ la primer posicion es cer
 
 #+ TEMA ESPECIAL NEGATIVECALCULATION +#
 a := 4.1
-b := -1.5
+a1 := -1.5
 
-x = negativeCalculation(3.5, -2.0, a, b, -3.0)
+b = negativeCalculation(3.5, -2.0, a, a1, -3.0)
 #+ Cantidad de negativos: 3 (impar) +#
 #+ x := (-2.0) * (-1.5) * (-3.0) = -9.0 +#
 
-c := -1.7
+b1 := -1.7
 
-x = negativeCalculation(-4.0, 2.3, c, 5.6)  
+x8 = negativeCalculation(-4.0, 2.3, b1, 5.6)  
 #+ Cantidad de negativos: 2 (par)  +# 
 #+ x := (-4.0) + (-1.7) = -5.7 +#
