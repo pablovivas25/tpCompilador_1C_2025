@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "y.tab.h"
-#include "./funciones/funciones.c"
+#include "./funciones/funciones.h"
 #include "./funciones/pila.c"
 #include "./funciones/RPN.c"
 #include "./funciones/AssemblerUtils.h"
@@ -29,6 +29,7 @@ int contAND=0, contOR=0;
 int contArgREORDER=0;
 int contArgCALNEG=0;
 int primerNeg=0;
+int contarIngresos=0;
 enum CLAUSE_LIST clauseType;
 
 int yyerror();
@@ -91,6 +92,8 @@ int verificar_y_contar_negs(char *);
 %type  <strVal> expresion
 %token .
 
+%start programa
+
 %%
 
 programa:
@@ -99,14 +102,14 @@ programa:
         printf("\n################ Reverse Polish Notation ################\n");
         mostrar_polaca();
         printf("#########################################################\n");
-        printf(" INICIANDO GENERACIÓN ASM \n");
-        generar_assembler(rpn->vector_elements, rpn->vector_index); 
+        printf("\n\n:: INICIANDO GENERACION CODIGO ASM ----------------------\n");
+        generar_assembler(&listaTS, rpn->vector_elements, rpn->vector_index);
     }
     ;
 
 sentencias:
     sentencia
-    | programa sentencia;
+    | sentencias sentencia;
 
 sentencia: 
     declaracion
@@ -156,7 +159,7 @@ read:
 
 write:
     WRITE PA ID PC { insertar_en_polaca($3); }
-    | WRITE PA CTE_STRING PC { insertar_en_polaca($3); };
+    | WRITE PA CTE_STRING PC { insertar_en_polaca($3); insertString(&listaTS, $3); };
 
 while:
     WHILE 
@@ -440,7 +443,7 @@ asignacion:
         
         const char* tipoID = getTipoDatoVariable(&listaTS, $1);
         const char* tipoFactor = getTipoDatoVariable(&listaTS, $3);
-
+        
         if (tipoID == NULL) {
             printf("ERROR: La variable '%s' no fue declarada.\n", $1);
             exit(1);

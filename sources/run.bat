@@ -11,7 +11,7 @@ if not "%TEST_FILE%"=="" (
 flex Lexico.l
 bison -dyv Sintactico.y
 
-gcc.exe ./funciones/PilaEstaticaASM.c ./funciones/AssemblerUtils.c lex.yy.c y.tab.c -o compilador.exe
+gcc.exe ./funciones/lista.c ./funciones/funciones.c ./funciones/PilaEstaticaASM.c ./funciones/AssemblerUtils.c lex.yy.c y.tab.c -o compilador.exe
 
 
 compilador.exe "%TEST_FILE%"

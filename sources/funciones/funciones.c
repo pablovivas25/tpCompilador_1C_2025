@@ -1,19 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "lista.c"
-
-#define SUCCESS 1
-#define DUPLICATE 2
-#define NO_MEMORY 0
-
-int insertVariable(tList *p, char *name, char *dataType); 
-int insertString(tList *p, char *name);
-char *deleteCharacter(char *lex);
-int insertNumber(tList *p, char *lex);
-void crearTS(tList *p);
-void recorrerTS(tList *p);
-const char* getTipoDatoVariable(tList* ts, const char* nombreVar);
+#include "lista.h"
+#include "funciones.h"
 
 int insertNumber(tList *p, char *lex) 
 {
@@ -26,7 +15,7 @@ int insertNumber(tList *p, char *lex)
     if(strrchr (lex, '.')) {
         result = insertOrder(p, name, "CTE_FLOAT", lex, 0);
     }
-    result = insertOrder(p, name, "CTE_INT", lex, 0);
+    result = insertOrder(p, name, "CTE_INTEGER", lex, 0);
 
     if(result == DUPLICATE){
         //printf("Lexema %s ya se ingreso en la tabla de simbolos\n",lex);
@@ -122,28 +111,55 @@ void recorrerTS(tList *p) {
     }
 }
 
+/**
+ * @brief Busqueda de tipo para validar la compatibilidad de operaciones.
+ * Se puede utilizar en cualquier ambito de validación de tipo.
+ * @param p Puntero a la estructura de la lista.
+ * @param nombreVar Puntero al nombre de la variable que busco.
+ */
 const char* getTipoDatoVariable(tList *p, const char* nombreVar) {
 
     char nombreCTE[100];
     strcpy(nombreCTE, "_");
-    strcat(nombreCTE, nombreVar);
+    strcat(nombreCTE, nombreVar); // si nombreVar, _cte(str|float|integer)
 
+    char *dataType;
     while (*p) {
         if (strcmp((*p)->name, nombreVar) == 0 || strcmp((*p)->name, nombreCTE) == 0) {
-
             // generar equivalencias entre tipos de datos
             if (strcmp((*p)->dataType, "FLOAT") == 0 || strcmp((*p)->dataType, "CTE_FLOAT") == 0)
             {
-                strcpy((*p)->dataType, "FLOAT");
+                return("FLOAT");
             }
-            else if (strcmp((*p)->dataType,"INT") == 0 || strcmp((*p)->dataType,"CTE_INT") == 0)
+            else if (strcmp((*p)->dataType,"INTEGER") == 0 || strcmp((*p)->dataType,"CTE_INTEGER") == 0)
             {
-                strcpy((*p)->dataType, "INTEGER");
+                return("INTEGER");
             }
             else if (strcmp((*p)->dataType,"STRING") == 0 || strcmp((*p)->dataType,"CTE_STRING") == 0)
             {
-                strcpy((*p)->dataType, "STRING");
+                return("STRING");
             }
+        }
+        p = &(*p)->next;
+    }
+    return NULL; // no encontrado
+}
+
+/**
+ * @brief Busqueda de tipo generar el codigo asm.
+ * Se puede llamar en cualquier ambito para obtener el tipo. Devuelve STRING, INTEGER, FLOAT.
+ * CTE_STRING, CTE_FLOAT y CTE_INTEGER.
+ * @param p Puntero a la estructura de la lista.
+ * @param nombreVar Puntero al nombre de la variable que busco.
+ */
+char* get_type_in_ts(tList *p, const char* nombreVar) {
+
+    char nombreCTE[100];
+    strcpy(nombreCTE, "_");
+    strcat(nombreCTE, nombreVar);
+    // busco la variable para determinar el tipo. pregunto por nombreVar||_cte(str|float|integer)
+    while (*p) {
+        if (strcmp((*p)->name, nombreVar) == 0 || strcmp((*p)->name, nombreCTE) == 0) { 
             return (*p)->dataType;
         }
         p = &(*p)->next;

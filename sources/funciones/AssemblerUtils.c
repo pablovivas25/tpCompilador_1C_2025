@@ -4,6 +4,8 @@
 #include <stdlib.h> // Para EXIT_FAILURE
 #include <ctype.h> // Para isalnum, isalpha
 #include "PilaEstaticaASM.h"
+#include "funciones.h"
+//#include "funciones.c"
 
 /**
  * @brief Estandariza un nombre de variable para ser compatible con la sintaxis de etiquetas de ensamblador.
@@ -182,11 +184,11 @@ void agregar_operando(FILE* archivo, const char* operando) {
     }
 }
 
-int generar_assembler(char **polaca, int rpn_size) {
+int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
     if (rpn_size>0) {
-        printf("La polaca tiene %d",rpn_size);
+        printf("La polaca tiene %d ELEMENTOS\n\n",rpn_size);
     } else {
-        printf("La polaca NO tiene elementos: size %d",rpn_size);
+        printf("La polaca NO tiene ELEMENTOS: size %d\n\n",rpn_size);
         return EXIT_FAILURE;
     }
 
@@ -213,58 +215,65 @@ int generar_assembler(char **polaca, int rpn_size) {
 					 ".DATA\n");
 
     /** CARGAR LA DEFINICION DE DATOS - SE LEE DESDE LA TS - TABLA DE SIMBOLOS */
-
-    fprintf(archivo, "\t%-35s	DD	99999.99\n", estandarizar_nombre_ensamblador("99999.99"));
-    fprintf(archivo, "\t%-35s	DD	99.\n", estandarizar_nombre_ensamblador("99."));
-    fprintf(archivo, "\t%-35s	DD	.9999\n", estandarizar_nombre_ensamblador(".9999"));
-    fprintf(archivo, "\t%-35s	DD	1\n", estandarizar_nombre_ensamblador("1"));
-    fprintf(archivo, "\t%-35s	DD	2\n", estandarizar_nombre_ensamblador("2"));
-    fprintf(archivo, "\t%-35s	DD	3\n", estandarizar_nombre_ensamblador("3"));
-    fprintf(archivo, "\t%-35s	DD	5\n\n", estandarizar_nombre_ensamblador("5"));
+    fprintf(archivo, "; definicion de constantes float y enteras\n");
+    tList *tmpTS = ptrTS;
+    while (*tmpTS) {
+        if (strcmp((*tmpTS)->dataType, "CTE_FLOAT")==0) {
+#ifdef DEBUG_MODE
+        printf("DEBUG: GENERADO %s value(%s), type(%s)\n", (*tmpTS)->name, (*tmpTS)->value, (*tmpTS)->dataType);
+#endif // DEBUG_MODE
+            
+            fprintf(archivo, "\t%-35s	DD	%s\n", estandarizar_nombre_ensamblador((*tmpTS)->value),(*tmpTS)->value);
+        } else if (strcmp((*tmpTS)->dataType, "CTE_INTEGER")==0) {
+#ifdef DEBUG_MODE
+        printf("DEBUG: GENERADO %s value(%s), type(%s)\n", (*tmpTS)->name, (*tmpTS)->value, (*tmpTS)->dataType);
+#endif // DEBUG_MODE
+            fprintf(archivo, "\t%-35s	DD	%s.0\n", estandarizar_nombre_ensamblador((*tmpTS)->value),(*tmpTS)->value);
+        }
+        tmpTS = &(*tmpTS)->next;
+    }
+    fprintf(archivo, "\n"); // FIN DE CONSTANTES ENTERAS Y FLOTANTES
 
     /** CONSTANTES STRING */
-	char *tmpVar;
-	tmpVar=estandarizar_nombre_ensamblador("\"@sdADaSjfla%dfg\"");
-    fprintf(archivo, "\t%-35s\tDB  \"@sdADaSjfla%%dfg\",'$'\n", tmpVar);
-	fprintf(archivo, "\ts@%-32s\tEQU ($ - %s)\n", tmpVar, tmpVar);
+    fprintf(archivo, "; definicion de constantes string\n");
+    tmpTS = ptrTS;
+    char *tmpVar;
+    char varName[80] = "";
+    while (*tmpTS) {
+        
+        if (strcmp((*tmpTS)->dataType, "CTE_STRING")==0) {  
+#ifdef DEBUG_MODE
+        printf("ESTE ES %s value(%s), type(%s)\n", (*tmpTS)->name, (*tmpTS)->value, (*tmpTS)->dataType);
+#endif // DEBUG_MODE
 
-	tmpVar=estandarizar_nombre_ensamblador("\"asldk  fh sjf\"");
-	fprintf(archivo, "\t%-35s\tDB	\"asldk  fh sjf\",'$'\n", tmpVar);
-	fprintf(archivo, "\ts@%-32s\tEQU ($ - %s)\n", tmpVar, tmpVar);
+            varName[0]='"';
+            varName[1]='\0';
+            strcat(varName, (*tmpTS)->value);
+            strcat(varName, "\"");
+            tmpVar=estandarizar_nombre_ensamblador(varName);
+            fprintf(archivo, "\t%-50s\tDB  %s,'$'\n", tmpVar, varName);
+            fprintf(archivo, "\ts@%-48s\tEQU ($ - %s)\n", tmpVar, tmpVar);
+        } 
+        tmpTS = &(*tmpTS)->next;
+    }
+    fprintf(archivo, "\n"); // FIN DE CONSTANTES STRING
 
-	tmpVar=estandarizar_nombre_ensamblador("\"a es mas grande que a1\"");
-    fprintf(archivo, "\t%-35s\tDB	\"a es mas grande que a1\",'$'\n", tmpVar);
-	fprintf(archivo, "\ts@%-32s\tEQU ($ - %s)\n", tmpVar, tmpVar);
-
-	tmpVar=estandarizar_nombre_ensamblador("\"a es mas chico o igual a a1\"");
-    fprintf(archivo, "\t%-35s\tDB	\"a es mas chico o igual a a1\",'$'\n", tmpVar);
-	fprintf(archivo, "\ts@%-32s\tEQU ($ - %s)\n", tmpVar, tmpVar);
-
-    tmpVar=estandarizar_nombre_ensamblador("\"variable1 es mas grande que d y c es mas grande que d\"");
-    fprintf(archivo, "\t%-60s\tDB	\"variable1 es mas grande que d y c es mas grande que d\",'$'\n", tmpVar);
-	fprintf(archivo, "\ts@%-58s\tEQU ($ - %s)\n", tmpVar, tmpVar);
-
-	tmpVar=estandarizar_nombre_ensamblador("\"variable1 es mas grande que d o c es mas grande que d\"");
-    fprintf(archivo, "\t%-60s\tDB	\"variable1 es mas grande que d o c es mas grande que d\",'$'\n", tmpVar);
-	fprintf(archivo, "\ts@%-58s\tEQU ($ - %s)\n", tmpVar, tmpVar);
-
-	tmpVar=estandarizar_nombre_ensamblador("\"d no es mas grande que c. check NOT\"");
-    fprintf(archivo, "\t%-60s\tDB	\"d no es mas grande que c. check NOT\",'$'\n", tmpVar);
-	fprintf(archivo, "\ts@%-58s\tEQU ($ - %s)\n", tmpVar, tmpVar);
-
-	tmpVar=estandarizar_nombre_ensamblador("\"muestro hasta que c sea mayor que d\"");
-    fprintf(archivo, "\t%-60s\tDB	\"muestro hasta que c sea mayor que d\",'$'\n", tmpVar);
-	fprintf(archivo, "\ts@%-58s\tEQU ($ - %s)\n\n", tmpVar, tmpVar);
-
-	/** VARIABLES STRING */
-    fprintf(archivo, "\t@usr_%-30s\tDD  ?\n", "a"); /** DECLARACIÓN DE Asignación a ENTERO O FLOAT*/
-    fprintf(archivo, "\t@usr_%-30s\tDB	MAXTEXTSIZE dup (?),'$'\n", "b"); /** DECLARACIÓN DE Asignación a STRING*/
-    fprintf(archivo, "\t@usr_%-30s\tDD  ?\n", "a1"); /** DECLARACIÓN DE Asignación a ENTERO O FLOAT*/
-    fprintf(archivo, "\t@usr_%-30s\tDD  ?\n", "c"); /** DECLARACIÓN DE Asignación a ENTERO O FLOAT*/
-    fprintf(archivo, "\t@usr_%-30s\tDD  ?\n", "d"); /** DECLARACIÓN DE Asignación a ENTERO O FLOAT*/
-    fprintf(archivo, "\t@usr_%-30s\tDD  ?\n", "variable1"); /** DECLARACIÓN DE Asignación a ENTERO O FLOAT*/
-    fprintf(archivo, "\t@usr_%-30s\tDB	MAXTEXTSIZE dup (?),'$'\n", "s1");   /** DECLARACIÓN DE Asignación a STRING*/
-    fprintf(archivo, "\t@usr_%-30s\tDB  MAXTEXTSIZE dup (?),'$'\n", "p1");   /** DECLARACIÓN DE Asignación a STRING*/
+    fprintf(archivo, "; definicion de variables\n");
+    tmpTS = ptrTS;
+    while (*tmpTS) {
+        if (strcmp((*tmpTS)->dataType, "STRING")==0) {           
+#ifdef DEBUG_MODE
+        printf("ESTa ES %s type(%s)\n", (*tmpTS)->name, (*tmpTS)->dataType);
+#endif // DEBUG_MODE
+            fprintf(archivo, "\t@usr_%-30s\tDB	MAXTEXTSIZE dup (?),'$'\n", (*tmpTS)->name); /** DECLARACIÓN DE Asignación a STRING*/
+        } else if (strcmp((*tmpTS)->dataType, "FLOAT")==0 || strcmp((*tmpTS)->dataType, "INTEGER")==0) {
+#ifdef DEBUG_MODE
+        printf("DEBUG: ESTa ES %s type(%s)\n", (*tmpTS)->name, (*tmpTS)->dataType);
+#endif // DEBUG_MODE
+            fprintf(archivo, "\t@usr_%-30s\tDD  ?\n", (*tmpTS)->name);
+        }
+        tmpTS = &(*tmpTS)->next;
+    }
 
     /** ############################################################ */
     PilaEstatica pilaASM;
@@ -382,8 +391,10 @@ int generar_assembler(char **polaca, int rpn_size) {
         } else {
             push(&pilaASM, polaca[i]);
         }
-
-
+    }
+    if (salto==i) {
+        fprintf(archivo, "TAG_%d:\n",i);
+        salto=-1;
     }
 
     fprintf(archivo,"\nFINAL:\n"

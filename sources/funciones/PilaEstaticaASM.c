@@ -2,6 +2,8 @@
 #include <stdlib.h>  // Para malloc, free, exit, EXIT_FAILURE
 #include <string.h>  // Para strdup, strlen
 #include "PilaEstaticaASM.h"
+
+//#define DEBUG_MODE
 // --- Implementación de funciones ---
 
 /**
@@ -21,7 +23,10 @@ void inicializarPila(PilaEstatica *pila, int capacidad) {
     }
     pila->tope = -1; // La pila está vacía al principio
     pila->capacidad = capacidad;
-    printf("Pila inicializada con capacidad: %d\n", capacidad);
+    
+    #ifdef DEBUG_MODE
+        printf("DEBUG: Pila inicializada con capacidad: %d\n", capacidad);
+    #endif // DEBUG_MODE
 }
 
 /**
@@ -42,7 +47,10 @@ void destruirPila(PilaEstatica *pila) {
     pila->elementos = NULL; // Evitar punteros colgantes
     pila->capacidad = 0;
     pila->tope = -1;
-    printf("Pila destruida y memoria liberada.\n");
+    
+    #ifdef DEBUG_MODE
+        printf("DEBUG: Pila destruida y memoria liberada.\n");
+    #endif // DEBUG_MODE
 }
 
 /**
@@ -81,7 +89,10 @@ void push(PilaEstatica *pila, const char *elemento) {
         pila->tope--; // Deshacer el incremento de tope
         exit(EXIT_FAILURE);
     }
-    printf("Apilado: '%s'\n", elemento);
+    
+    #ifdef DEBUG_MODE
+        printf("DEBUG: Apilado: '%s'\n", elemento);
+    #endif // DEBUG_MODE
 }
 
 /**
@@ -98,7 +109,9 @@ char* pop(PilaEstatica *pila) {
     char* elemento_desapilado = pila->elementos[pila->tope];
     pila->elementos[pila->tope] = NULL; // Opcional: limpiar la referencia
     pila->tope--;
-    printf("Desapilado: '%s'\n", elemento_desapilado);
+    #ifdef DEBUG_MODE
+        printf("DEBUG: Desapilado: '%s'\n", elemento_desapilado);
+    #endif // DEBUG_MODE
     return elemento_desapilado; // Retorna el puntero al string
 }
 
