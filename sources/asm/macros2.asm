@@ -63,6 +63,54 @@ displayString                  macro  string          ;write string on screen
 
 endm
 
+; ----------------------------------------------------
+; Macro: GET_STRING_LENGTH
+; Prop?sito: Calcula la longitud de una cadena terminada en nulo.
+; Entrada:   Requiere que SI contenga la direcci?n de inicio de la cadena.
+; Salida:    CX -> Longitud de la cadena (sin incluir el terminador nulo).
+;            DI -> Apunta al byte NULL que termina la cadena.
+;            AX se usa internamente (no se restaura).
+;            CX es el resultado. SI se modifica temporalmente y luego se restaura.
+; ----------------------------------------------------
+GET_STRING_LENGTH MACRO
+    LOCAL __start_scan, __end_scan ; Etiquetas locales para evitar conflictos de nombres
+
+    ; Preservar SI si no quieres que cambie despu?s de la macro
+    PUSH SI
+
+    MOV DI, SI      ; DI debe apuntar al inicio de la cadena (SCASB usa ES:DI)
+    MOV AL, 0       ; Byte a buscar: el terminador nulo (0)
+    MOV CX, 0FFFFh  ; M?ximo n?mero de caracteres a buscar
+
+    CLD             ; Asegurar que DI se incrementa
+
+    __start_scan:   ; Etiqueta para el bucle
+        SCASB       ; Compara AL con byte en ES:DI, incrementa DI, decrementa CX.
+        JNE __start_scan ; Repite si el byte no es el terminador nulo
+
+    ; Cuando el bucle termina, DI apunta al byte DESPUES del nulo, y CX es 0xFFFF - longitud + 1.
+    NOT CX          ; Invierte todos los bits de CX
+    DEC CX          ; Decrementa CX
+                    ; Ahora CX contiene la longitud de la cadena.
+
+    POP SI          ; Restaurar SI
+ENDM ; Fin de la macro GET_STRING_LENGTH
+
+;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+assignToString          macro origin_str, dest_str, size          ;write string on screen
+                        PUSH SI
+
+                        ; asigna el string 
+                        MOV SI, OFFSET origin_str
+                        MOV DI, OFFSET dest_str
+                        MOV CX, size
+                        CLD           ; Asegura que SI y DI se incrementen
+                        REP MOVSB     ; Copia CX bytes de [DS:SI] a [ES:DI]
+                        
+                        POP SI          ; Restaurar SI
+
+endm
+
 ;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 scrollup                macro      number    ;scroll screen up
 
