@@ -1,0 +1,402 @@
+#include <stdio.h>
+#include <string.h>   // For strstr, strlen, strncpy
+#include <stdlib.h>   // For malloc, realloc, free
+#include <stdlib.h> // Para EXIT_FAILURE
+#include <ctype.h> // Para isalnum, isalpha
+#include "PilaEstaticaASM.h"
+
+/**
+ * @brief Estandariza un nombre de variable para ser compatible con la sintaxis de etiquetas de ensamblador.
+ *
+ * Reemplaza caracteres no alfanuméricos (excepto el guion bajo) por guiones bajos.
+ * Asegura que el nombre no empiece con un dígito.
+ * Convierte el nombre a minúsculas (opcional, pero buena práctica para consistencia).
+ *
+ * @param nombre_original El nombre de la variable a estandarizar.
+ * @return Un nuevo string con el nombre estandarizado. Debe ser liberado con free() por el llamador.
+ * Retorna NULL si hay un error de asignación de memoria.
+ */
+char* estandarizar_nombre_ensamblador(const char* nombre_original) {
+    if (nombre_original == NULL || strlen(nombre_original) == 0) {
+        // Retornar una cadena vacía o NULL si el nombre original es inválido
+        return strdup("");
+    }
+
+    // +1 para el posible guion bajo inicial, +1 para el terminador nulo
+    char* nombre_estandarizado = (char*)malloc(strlen(nombre_original) + 2);
+    if (nombre_estandarizado == NULL) {
+        perror("Error de asignación de memoria para el nombre estandarizado");
+        return NULL;
+    }
+
+    int i = 0; // Índice para el nombre original
+    int j = 0; // Índice para el nombre estandarizado
+
+    // --- Paso 1: Asegurarse de que el nombre no empiece con un dígito ---
+    // Las etiquetas de ensamblador no suelen empezar con un número.
+    // Si el nombre original empieza con un dígito, prefijamos con un guion bajo.
+    if (isdigit(nombre_original[0])) {
+        nombre_estandarizado[j++] = '_';
+    } else if (!isalpha(nombre_original[0]) && nombre_original[0] != '_') {
+        // Si no es un dígito, ni una letra, ni un guion bajo, también prefijamos.
+        // Ej: ".variable" o "-mi-var"
+        nombre_estandarizado[j++] = '_';
+    }
+
+
+    // --- Paso 2: Procesar el resto de la cadena ---
+    for (i = 0; nombre_original[i] != '\0'; i++) {
+        char c = nombre_original[i];
+
+        if (isalnum(c) || c == '_') {
+            // Caracteres alfanuméricos y guiones bajos son válidos
+            // Convertir a minúsculas para consistencia (opcional)
+            nombre_estandarizado[j++] = tolower(c);
+        } else {
+            // Cualquier otro caracter no permitido (espacios, guiones medios, puntos, etc.)
+            // se reemplaza por un guion bajo.
+            if (j > 0 && nombre_estandarizado[j-1] != '_') { // Evitar dobles guiones bajos consecutivos
+                 nombre_estandarizado[j++] = '_';
+            }
+        }
+    }
+
+    // Eliminar posibles guiones bajos finales si se generaron por caracteres no alfanuméricos al final
+    while (j > 0 && nombre_estandarizado[j-1] == '_') {
+        j--;
+    }
+
+    nombre_estandarizado[j] = '\0'; // Asegurar la terminación nula
+
+    // Si el nombre resultante es solo un guion bajo (ej. de un nombre como ".`"), devolver algo más significativo
+    if (strcmp(nombre_estandarizado, "_") == 0 && strlen(nombre_original) > 0) {
+        free(nombre_estandarizado);
+        return strdup("_renamed_var"); // O alguna otra convención
+    }
+
+    return nombre_estandarizado;
+}
+
+// Función para verificar si un string comienza con un prefijo
+int startsWith(const char *str, const char *prefix) {
+    // 1. Obtener la longitud del prefijo
+    size_t prefix_len = strlen(prefix);
+    // 2. Obtener la longitud de la cadena principal
+    size_t str_len = strlen(str);
+
+    // 3. Si la cadena principal es más corta que el prefijo,
+    //    es imposible que comience con ese prefijo.
+    if (str_len < prefix_len) {
+        return 0; // Falso
+    }
+
+    // 4. Comparar los primeros 'prefix_len' caracteres
+    //    Si son idénticos, strncmp devuelve 0.
+    if (strncmp(str, prefix, prefix_len) == 0) {
+        return 1; // Verdadero
+    } else {
+        return 0; // Falso
+    }
+}
+
+int es_operador(char* elemento) {
+	if (strcmp(elemento, "+")==0) {
+		return 1;
+	} else if (strcmp(elemento, "-")==0) {
+		return 2;
+	} else if (strcmp(elemento, "*")==0) {
+		return 3;
+	} else if (strcmp(elemento, "/")==0) {
+		return 4;
+	} else if (strcmp(elemento, "=:")==0) {
+		return 5;
+	} else if (strcmp(elemento, "write")==0) {
+        return 6;
+	} else if (strcmp(elemento, "CMP")==0) {
+        return 6;
+	}
+	return 0;
+}
+
+
+char* get_type(const char* element) {
+/** a, a1, b1, x1, z, f : Float
+    variable1, d, c, x, r, j : Int
+    b, p1, p2, p3 : String*/
+
+    char *arrayStr[]= {
+        "b", "p1", "p2", "p3", NULL // Marcador de fin de array
+    };
+    char *arrayFlt[]= {
+        "a", "a1", "b1", "x1", "z", "f", NULL // Marcador de fin de array
+    };
+    char *arrayInt[]= {
+        "variable1", "d", "c", "x", "r", "j", NULL // Marcador de fin de array
+    };
+    int i=0;
+    while (arrayStr[i] != NULL) {
+        if (strcmp(element,arrayStr[i])==0) {
+            return ("STRING");
+        }
+        i++;
+    }
+    i=0;
+    while (arrayFlt[i] != NULL) {
+        if (strcmp(element,arrayFlt[i])==0) {
+            return ("FLOAT");
+        }
+        i++;
+    }
+    i=0;
+    while (arrayInt[i] != NULL) {
+        if (strcmp(element,arrayInt[i])==0) {
+            return ("INTEGER");
+        }
+        i++;
+    }
+    return ("CTE_VARIABLE");
+}
+
+char* get_jump(char* operador) {
+	if (strcmp(operador, "BLT")==0) {
+        return ("JB");
+    } else if (strcmp(operador, "BLE")==0) {
+        return ("JBE");
+    } else if (strcmp(operador, "BGT")==0) {
+        return ("JA");
+    } else if (strcmp(operador, "BGE")==0) {
+        return ("JAE");
+    } else if (strcmp(operador, "BEQ")==0) {
+        return ("JE");
+    } else if (strcmp(operador, "BNE")==0) {
+        return ("JNE");
+    }
+    return NULL;
+}
+
+void agregar_operando(FILE* archivo, const char* operando) {
+    if (startsWith(get_type(operando), "CTE_")==0) { //FALSO
+        fprintf(archivo, "\tFLD @usr_%s\n",operando);
+    } else {
+        fprintf(archivo, "\tFLD %s\n",estandarizar_nombre_ensamblador(operando));
+    }
+}
+
+int generar_assembler(char **polaca, int rpn_size) {
+    if (rpn_size>0) {
+        printf("La polaca tiene %d",rpn_size);
+    } else {
+        printf("La polaca NO tiene elementos: size %d",rpn_size);
+        return EXIT_FAILURE;
+    }
+
+    const char *nombre_archivo = "Final.asm";
+    printf("Intentando abrir/crear y limpiar el archivo '%s'...\n", nombre_archivo);
+
+    // Abrir el archivo en modo "w" (write)
+    // "w" crea el archivo si no existe, o lo trunca si existe.
+    FILE* archivo = fopen(nombre_archivo, "w");
+
+    // Verificar si el archivo se abrió/creó correctamente
+    if (archivo == NULL) {
+        perror("Error al abrir o crear el archivo"); // Muestra un mensaje de error del sistema
+        return EXIT_FAILURE; // Sale del programa con un código de error
+    }
+
+    /** BEGIN HEADER DE PROGRAMA */
+    fprintf(archivo, "include macros2.asm\n"
+					 "include number.asm\n\n"
+					 ".MODEL  LARGE\n"
+					 ".386\n"
+					 ".STACK 200h\n\n"
+					 "MAXTEXTSIZE equ 50\n\n"
+					 ".DATA\n");
+
+    /** CARGAR LA DEFINICION DE DATOS - SE LEE DESDE LA TS - TABLA DE SIMBOLOS */
+
+    fprintf(archivo, "\t%-35s	DD	99999.99\n", estandarizar_nombre_ensamblador("99999.99"));
+    fprintf(archivo, "\t%-35s	DD	99.\n", estandarizar_nombre_ensamblador("99."));
+    fprintf(archivo, "\t%-35s	DD	.9999\n", estandarizar_nombre_ensamblador(".9999"));
+    fprintf(archivo, "\t%-35s	DD	1\n", estandarizar_nombre_ensamblador("1"));
+    fprintf(archivo, "\t%-35s	DD	2\n", estandarizar_nombre_ensamblador("2"));
+    fprintf(archivo, "\t%-35s	DD	3\n", estandarizar_nombre_ensamblador("3"));
+    fprintf(archivo, "\t%-35s	DD	5\n\n", estandarizar_nombre_ensamblador("5"));
+
+    /** CONSTANTES STRING */
+	char *tmpVar;
+	tmpVar=estandarizar_nombre_ensamblador("\"@sdADaSjfla%dfg\"");
+    fprintf(archivo, "\t%-35s\tDB  \"@sdADaSjfla%%dfg\",'$'\n", tmpVar);
+	fprintf(archivo, "\ts@%-32s\tEQU ($ - %s)\n", tmpVar, tmpVar);
+
+	tmpVar=estandarizar_nombre_ensamblador("\"asldk  fh sjf\"");
+	fprintf(archivo, "\t%-35s\tDB	\"asldk  fh sjf\",'$'\n", tmpVar);
+	fprintf(archivo, "\ts@%-32s\tEQU ($ - %s)\n", tmpVar, tmpVar);
+
+	tmpVar=estandarizar_nombre_ensamblador("\"a es mas grande que a1\"");
+    fprintf(archivo, "\t%-35s\tDB	\"a es mas grande que a1\",'$'\n", tmpVar);
+	fprintf(archivo, "\ts@%-32s\tEQU ($ - %s)\n", tmpVar, tmpVar);
+
+	tmpVar=estandarizar_nombre_ensamblador("\"a es mas chico o igual a a1\"");
+    fprintf(archivo, "\t%-35s\tDB	\"a es mas chico o igual a a1\",'$'\n", tmpVar);
+	fprintf(archivo, "\ts@%-32s\tEQU ($ - %s)\n", tmpVar, tmpVar);
+
+    tmpVar=estandarizar_nombre_ensamblador("\"variable1 es mas grande que d y c es mas grande que d\"");
+    fprintf(archivo, "\t%-60s\tDB	\"variable1 es mas grande que d y c es mas grande que d\",'$'\n", tmpVar);
+	fprintf(archivo, "\ts@%-58s\tEQU ($ - %s)\n", tmpVar, tmpVar);
+
+	tmpVar=estandarizar_nombre_ensamblador("\"variable1 es mas grande que d o c es mas grande que d\"");
+    fprintf(archivo, "\t%-60s\tDB	\"variable1 es mas grande que d o c es mas grande que d\",'$'\n", tmpVar);
+	fprintf(archivo, "\ts@%-58s\tEQU ($ - %s)\n", tmpVar, tmpVar);
+
+	tmpVar=estandarizar_nombre_ensamblador("\"d no es mas grande que c. check NOT\"");
+    fprintf(archivo, "\t%-60s\tDB	\"d no es mas grande que c. check NOT\",'$'\n", tmpVar);
+	fprintf(archivo, "\ts@%-58s\tEQU ($ - %s)\n", tmpVar, tmpVar);
+
+	tmpVar=estandarizar_nombre_ensamblador("\"muestro hasta que c sea mayor que d\"");
+    fprintf(archivo, "\t%-60s\tDB	\"muestro hasta que c sea mayor que d\",'$'\n", tmpVar);
+	fprintf(archivo, "\ts@%-58s\tEQU ($ - %s)\n\n", tmpVar, tmpVar);
+
+	/** VARIABLES STRING */
+    fprintf(archivo, "\t@usr_%-30s\tDD  ?\n", "a"); /** DECLARACIÓN DE Asignación a ENTERO O FLOAT*/
+    fprintf(archivo, "\t@usr_%-30s\tDB	MAXTEXTSIZE dup (?),'$'\n", "b"); /** DECLARACIÓN DE Asignación a STRING*/
+    fprintf(archivo, "\t@usr_%-30s\tDD  ?\n", "a1"); /** DECLARACIÓN DE Asignación a ENTERO O FLOAT*/
+    fprintf(archivo, "\t@usr_%-30s\tDD  ?\n", "c"); /** DECLARACIÓN DE Asignación a ENTERO O FLOAT*/
+    fprintf(archivo, "\t@usr_%-30s\tDD  ?\n", "d"); /** DECLARACIÓN DE Asignación a ENTERO O FLOAT*/
+    fprintf(archivo, "\t@usr_%-30s\tDD  ?\n", "variable1"); /** DECLARACIÓN DE Asignación a ENTERO O FLOAT*/
+    fprintf(archivo, "\t@usr_%-30s\tDB	MAXTEXTSIZE dup (?),'$'\n", "s1");   /** DECLARACIÓN DE Asignación a STRING*/
+    fprintf(archivo, "\t@usr_%-30s\tDB  MAXTEXTSIZE dup (?),'$'\n", "p1");   /** DECLARACIÓN DE Asignación a STRING*/
+
+    /** ############################################################ */
+    PilaEstatica pilaASM;
+    int capacidad_pila = 1000; // Definimos una capacidad fija de 1000 elementos
+
+    inicializarPila(&pilaASM, capacidad_pila);
+    /** Empezar a trabajar sobre la polaca */
+    fprintf(archivo, "\n.CODE\n");
+    fprintf(archivo, "START:\n"
+            "\tMOV AX,@DATA\n"
+            "\tMOV DS,AX\n"
+            "\tMOV ES,AX\n"
+            "\tFINIT; Inicializa el coprocesador\n");
+	int salto=-1;
+	int codeOperador;
+    int i;
+    for (i=0; i<rpn_size; i++) {
+        // Escribir algo en el archivo
+		if (salto==i) {
+			fprintf(archivo, "TAG_%d:\n",i);
+			salto=-1;
+		}
+		codeOperador=es_operador(polaca[i]);
+        if (codeOperador) {
+			char *priOp;
+			char *segOp;
+			if (codeOperador == 5) { // operador de asignación '=:'
+				priOp=pop(&pilaASM);
+				segOp=pop(&pilaASM);
+				if (strcmp(get_type(priOp), "STRING")==0) {
+                    /** Forma de asignar una constante a una variabla
+                      * assignToString _cte_str, @usr_b, s@_cte_str: macro en macros2.asm
+                      * _cte_str: constante declarada en el espacio de datos
+                      * @usr_b: variable de usuario a la que se asigna el string
+                      * s@_cte_str: size de la constante string, necesario para realizar la asignacion. */
+                    tmpVar=estandarizar_nombre_ensamblador(segOp);
+                    fprintf(archivo, "\tassignToString %s, @usr_%s, s@%s\n",tmpVar,priOp,tmpVar);
+				} else {
+				    if (strcmp(segOp, "@tmp")==0) {
+                        fprintf(archivo, "\tFSTP @usr_%s\n",priOp);
+				    } else {
+                        fprintf(archivo, "\tFLD %s\n",estandarizar_nombre_ensamblador(segOp));
+                        fprintf(archivo, "\tFSTP @usr_%s\n",priOp);
+                        // fprintf(archivo, "\tFFREE\n"); // no es necesario
+				    }
+				}
+			} else if (codeOperador>=1&&codeOperador<=4) { // si son los operadores '+', '-', '*' y '/'
+			    segOp=pop(&pilaASM);
+			    priOp=pop(&pilaASM);
+			    if (strcmp(priOp, "@tmp")==0) {
+                    //fprintf(archivo, "\tFLD @usr_%s\n",segOp);
+                    agregar_operando(archivo, segOp);
+			    } else {
+                    //fprintf(archivo, "\tFLD @usr_%s\n",priOp);
+                    //fprintf(archivo, "\tFLD @usr_%s\n",segOp);
+                    agregar_operando(archivo, priOp);
+                    agregar_operando(archivo, segOp);
+			    }
+			    switch(codeOperador) {
+                    case 1: fprintf(archivo, "\tFADD\n"); break;
+                    case 2: fprintf(archivo, "\tFSUB\n"); break;
+                    case 3: fprintf(archivo, "\tFMUL\n"); break;
+                    case 4: fprintf(archivo, "\tFDIV\n"); break;
+                    default:
+                        printf("operación desconocida!");
+                        exit(1);
+                }
+                push(&pilaASM, "@tmp");
+			} else if (strcmp(polaca[i], "write")==0) {
+				priOp=pop(&pilaASM);
+				char *var_type=get_type(priOp);
+				if (strcmp(var_type, "STRING")==0) {
+                    fprintf(archivo, "\tdisplayString @usr_%s\n\tnewLine 1\n",priOp);	// standardize var.
+				} else if (strcmp(var_type, "FLOAT")==0) {
+                    fprintf(archivo, "\tDisplayFloat @usr_%s,2\n\tnewLine 1\n",priOp);	// standardize var.
+				} else if (strcmp(var_type, "INTEGER")==0) {
+                    fprintf(archivo, "\tDisplayInteger @usr_%s\n\tnewLine 1\n",priOp);	// standardize var.
+				} else {
+                    fprintf(archivo, "\tdisplayString %s\n\tnewLine 1\n",estandarizar_nombre_ensamblador(priOp));	// standardize var.
+				}
+
+			} else if (strcmp(polaca[i], "CMP")==0) {
+			    segOp=pop(&pilaASM);
+			    priOp=pop(&pilaASM);
+			    /** ; OPERACIONES AL LEER CMP
+                FLD	x	; ST(0) = x
+                FLD y	; ST(0) = y ST(1) = X
+
+                FXCH	; intercambio 0 y 1
+                FCOM	; compara ST(0) con ST(1)
+                FSTSW AX	; mueve los bits c3 y c0 a FLAGS
+                SAHF*/
+                agregar_operando(archivo, priOp);
+                agregar_operando(archivo, segOp);
+
+				fprintf(archivo, "\tFXCH\n\tFCOM\n\tFSTSW AX\n\tSAHF\n");
+				i++; // me posiciono en el siguiente elemento
+				char* tipo_salto = get_jump(polaca[i]);
+				i++;
+				fprintf(archivo, "\t%s TAG_%s\n",tipo_salto,polaca[i]);
+				salto=atoi(polaca[i]);
+			} else {
+				priOp=pop(&pilaASM);
+				segOp=pop(&pilaASM);
+				fprintf(archivo, "\t%s\n",priOp);
+			}
+            fflush(archivo);
+        } else if (strcmp(polaca[i], "BI")==0) {
+			i++;
+			fprintf(archivo, "\tJMP TAG_%s\n",polaca[i]);
+			salto=atoi(polaca[i]);
+			fprintf(archivo, "TAG_%d:\n",i+1);
+		} else if (strcmp(polaca[i], "ET")==0) {
+            fprintf(archivo, "TAG_%d:\n",i);
+        } else {
+            push(&pilaASM, polaca[i]);
+        }
+
+
+    }
+
+    fprintf(archivo,"\nFINAL:\n"
+                    "\tMOV ah, 1 ; pausa, espera que oprima una tecla\n"
+                    "\tINT 21h ; AH=1 es el servicio de lectura\n"
+                    "\tMOV AX, 4C00h ; Sale del Dos\n"
+                    "\tINT 21h       ; Enviamos la interripcion 21h\n"
+                    "END START ; final del archivo.\n");
+
+    printf("Ensamble Completo generado exitosamente en '%s'.\n", nombre_archivo);
+
+    // Es crucial cerrar el archivo para guardar los cambios y liberar recursos
+    fclose(archivo);
+    printf("Archivo cerrado. Puedes verificar su contenido.\n");
+    return EXIT_SUCCESS;
+}

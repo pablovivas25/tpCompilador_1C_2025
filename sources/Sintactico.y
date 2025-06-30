@@ -7,6 +7,7 @@
 #include "./funciones/funciones.c"
 #include "./funciones/pila.c"
 #include "./funciones/RPN.c"
+#include "./funciones/AssemblerUtils.h"
 
 enum CLAUSE_LIST {
     IF_CLAUSE,
@@ -93,6 +94,17 @@ int verificar_y_contar_negs(char *);
 %%
 
 programa:
+    sentencias { 
+        crearTS(&listaTS);
+        printf("\n################ Reverse Polish Notation ################\n");
+        mostrar_polaca();
+        printf("#########################################################\n");
+        printf(" INICIANDO GENERACIÓN ASM \n");
+        generar_assembler(rpn->vector_elements, rpn->vector_index); 
+    }
+    ;
+
+sentencias:
     sentencia
     | programa sentencia;
 
@@ -628,12 +640,6 @@ int main(int argc, char *argv[])
     createStack(&pilaTipoDatoVariable);
     
     yyparse();
-   
-    crearTS(&listaTS);
-
-    printf("\n################ Reverse Polish Notation ################\n");
-    mostrar_polaca();
-    printf("#########################################################\n");
     
     printf("\nCOMPILACION EXITOSA\n");
 
