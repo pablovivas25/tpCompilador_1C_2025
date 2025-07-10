@@ -1,0 +1,9 @@
+/sources/*.exe
+/sources/lex.yy.c
+/sources/y.tab.c
+/sources/y.tab.h
+/sources/y.output
+
+/sources/asm/*.obj
+/sources/asm/*.exe
+/sources/asm/*.map
