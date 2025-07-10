@@ -4,8 +4,19 @@
 #include <stdlib.h> // Para EXIT_FAILURE
 #include <ctype.h> // Para isalnum, isalpha
 #include "PilaEstaticaASM.h"
+#include "AssemblerUtils.h"
 #include "funciones.h"
-//#include "funciones.c"
+
+// --- Función de Hashing: DJB2 ---
+// Fuente: http://www.cse.yorku.ca/~oz/hash.html
+unsigned long hash_string_djb2(const char *str) {
+    unsigned long hash = 5381;
+    int c;
+    while ((c = *str++)) {
+        hash = ((hash << 5) + hash) + c; // hash * 33 + c
+    }
+    return hash;
+}
 
 /**
  * @brief Estandariza un nombre de variable para ser compatible con la sintaxis de etiquetas de ensamblador.
@@ -15,67 +26,114 @@
  * Convierte el nombre a minúsculas (opcional, pero buena práctica para consistencia).
  *
  * @param nombre_original El nombre de la variable a estandarizar.
+ * @param tipo El tipo de variable a estandarizar.
  * @return Un nuevo string con el nombre estandarizado. Debe ser liberado con free() por el llamador.
  * Retorna NULL si hay un error de asignación de memoria.
  */
-char* estandarizar_nombre_ensamblador(const char* nombre_original) {
+char* estandarizar_nombre_ensamblador(const char* nombre_original, VariableType tipo) {
+    // Manejo de nombres nulos o vacíos
     if (nombre_original == NULL || strlen(nombre_original) == 0) {
-        // Retornar una cadena vacía o NULL si el nombre original es inválido
-        return strdup("");
+        char* empty_name_prefix;
+        if (tipo == TYPE_INT) {
+            empty_name_prefix = "_int_empty";
+        } else if (tipo == TYPE_FLOAT) {
+            empty_name_prefix = "_float_empty";
+        } else if (tipo == TYPE_STRING) {
+            empty_name_prefix = "_strh_empty"; // Para string vacío o nulo
+        } else {
+            empty_name_prefix = "_empty_var";
+        }
+        char* new_name = strdup(empty_name_prefix);
+        if (new_name == NULL) {
+            perror("Error de asignacion de memoria para nombre de variable vacia");
+        }
+        return new_name;
     }
 
-    // +1 para el posible guion bajo inicial, +1 para el terminador nulo
-    char* nombre_estandarizado = (char*)malloc(strlen(nombre_original) + 2);
+    // Si es un STRING, generamos un nombre basado en el hash
+    if (tipo == TYPE_STRING) {
+        unsigned long hashed_value = hash_string_djb2(nombre_original);
+        // buffer_size: "_strh_" + 16 chars para hash hex (max de unsigned long) + '\0'
+        // Un unsigned long es 64 bits, por lo que 16 caracteres hexadecimales.
+        size_t buffer_size = strlen("_strh_") + 16 + 1;
+        char* hashed_name = (char*)malloc(buffer_size);
+        if (hashed_name == NULL) {
+            perror("Error de asignacion de memoria para nombre hasheado");
+            return NULL;
+        }
+        // Usamos snprintf para formatear el prefijo y el valor hexadecimal del hash
+        snprintf(hashed_name, buffer_size, "_strh_%lx", hashed_value);
+        return hashed_name; // Retornamos el nombre hasheado directamente
+    }
+
+    // --- Lógica de estandarización original para INT, FLOAT y UNKNOWN ---
+    // (Asegurarse que este tamaño sea suficiente para los prefijos y la estandarización)
+    // Longitud original + posible prefijo (_int_, _float_) + posible '_' + '\0'
+    size_t prefijo_len = 0;
+    if (tipo == TYPE_INT) {
+        prefijo_len = strlen("_int_");
+    } else if (tipo == TYPE_FLOAT) {
+        prefijo_len = strlen("_float_");
+    }
+
+    // Un tamaño generoso para la mayoría de los casos de estandarización.
+    // +2 para '_' inicial + '\0' o similar
+    char* nombre_estandarizado = (char*)malloc(strlen(nombre_original) + prefijo_len + 5);
     if (nombre_estandarizado == NULL) {
-        perror("Error de asignación de memoria para el nombre estandarizado");
+        perror("Error de asignacion de memoria para el nombre estandarizado");
         return NULL;
     }
 
-    int i = 0; // Índice para el nombre original
-    int j = 0; // Índice para el nombre estandarizado
+    int j = 0; // Índice para nombre_estandarizado
 
-    // --- Paso 1: Asegurarse de que el nombre no empiece con un dígito ---
-    // Las etiquetas de ensamblador no suelen empezar con un número.
-    // Si el nombre original empieza con un dígito, prefijamos con un guion bajo.
-    if (isdigit(nombre_original[0])) {
-        nombre_estandarizado[j++] = '_';
-    } else if (!isalpha(nombre_original[0]) && nombre_original[0] != '_') {
-        // Si no es un dígito, ni una letra, ni un guion bajo, también prefijamos.
-        // Ej: ".variable" o "-mi-var"
+    // --- Agregar prefijo basado en el tipo (solo INT y FLOAT aquí) ---
+    if (tipo == TYPE_INT) {
+        strcpy(&nombre_estandarizado[j], "_int_");
+        j += strlen("_int_");
+    } else if (tipo == TYPE_FLOAT) {
+        strcpy(&nombre_estandarizado[j], "_float_");
+        j += strlen("_float_");
+    }
+
+    // --- Lógica de estandarización de caracteres ---
+    int i = 0;
+    /** Si la cadena original comienza con un dígito o un carácter no alfanumérico/guion_bajo,
+     * añadir un '_' inicial (solo si no hay prefijo de tipo ya). isalpha controla si un char es [a-zA-Z]
+     * isdigit si un char es [0-9] */
+    if (j == 0 && (isdigit(nombre_original[0]) || (!isalpha(nombre_original[0]) && nombre_original[0] != '_'))) {
         nombre_estandarizado[j++] = '_';
     }
 
-
-    // --- Paso 2: Procesar el resto de la cadena ---
     for (i = 0; nombre_original[i] != '\0'; i++) {
         char c = nombre_original[i];
-
         if (isalnum(c) || c == '_') { // isalnum devuelve 0 si c es [a-zA-Z0-9]
-            // Caracteres alfanuméricos y guiones bajos son válidos
-            // Convertir a minúsculas para consistencia (opcional)
             nombre_estandarizado[j++] = tolower(c);
         } else {
-            // Cualquier otro caracter no permitido (espacios, guiones medios, puntos, etc.)
-            // se reemplaza por un guion bajo.
-            if (j > 0 && nombre_estandarizado[j-1] != '_') { // Evitar dobles guiones bajos consecutivos
-                 nombre_estandarizado[j++] = '_';
+            // Reemplazar caracteres no válidos con un guion bajo,
+            // evitando guiones bajos consecutivos si ya hay uno.
+            if (j > 0 && nombre_estandarizado[j-1] != '_') {
+                nombre_estandarizado[j++] = '_';
             }
         }
     }
 
-    // Eliminar posibles guiones bajos finales si se generaron por caracteres no alfanuméricos al final
+    // Eliminar guiones bajos finales
     while (j > 0 && nombre_estandarizado[j-1] == '_') {
         j--;
     }
+    nombre_estandarizado[j] = '\0'; // Asegurar terminador nulo
 
-    nombre_estandarizado[j] = '\0'; // Asegurar la terminación nula
-
-    // Si el nombre resultante es solo un guion bajo (ej. de un nombre como ".`"), devolver algo más significativo
+    // Manejar caso de nombre resultante solo con "_"
     if (strcmp(nombre_estandarizado, "_") == 0 && strlen(nombre_original) > 0) {
         free(nombre_estandarizado);
-        return strdup("_renamed_var"); // O alguna otra convención
+        if (tipo == TYPE_INT) {
+            return strdup("_int_renamed_var");
+        } else if (tipo == TYPE_FLOAT) {
+            return strdup("_float_renamed_var");
+        } else { // Para UNKNOWN (STRING ya se maneja arriba)
+            return strdup("_renamed_var");
+        }
     }
-
     return nombre_estandarizado;
 }
 
@@ -120,6 +178,17 @@ int es_operador(char* elemento) {
 	return 0;
 }
 
+VariableType get_std_type(const char* type_in_str) {
+    if (strcmp(type_in_str, "CTE_STRING")==0) {
+        return TYPE_STRING;
+    } else if (strcmp(type_in_str, "CTE_FLOAT")==0) {
+        return TYPE_FLOAT;
+    } else if (strcmp(type_in_str, "CTE_INTEGER")==0) {
+        return TYPE_INT;
+    }
+    return TYPE_UNKNOWN;
+}
+
 char* get_jump(char* operador) {
 	if (strcmp(operador, "BLT")==0) {
         return ("JB");
@@ -141,7 +210,7 @@ void agregar_operando(FILE* archivo, tList *ptrTS, const char* operando) {
     if (startsWith(get_type_in_ts(ptrTS,operando), "CTE_")==0) { //FALSO
         fprintf(archivo, "\tFLD @usr_%s\n",operando);
     } else {
-        fprintf(archivo, "\tFLD %s\n",estandarizar_nombre_ensamblador(operando));
+        fprintf(archivo, "\tFLD %s\n",estandarizar_nombre_ensamblador(operando, get_std_type(get_type_in_ts(ptrTS,operando))));
     }
 }
 
@@ -184,12 +253,12 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
         printf("DEBUG: GENERADO %s value(%s), type(%s)\n", (*tmpTS)->name, (*tmpTS)->value, (*tmpTS)->dataType);
 #endif // DEBUG_MODE
             
-            fprintf(archivo, "\t%-35s	DD	%s\n", estandarizar_nombre_ensamblador((*tmpTS)->value),(*tmpTS)->value);
+            fprintf(archivo, "\t%-35s	DD	%s\n", estandarizar_nombre_ensamblador((*tmpTS)->value, TYPE_FLOAT),(*tmpTS)->value);
         } else if (strcmp((*tmpTS)->dataType, "CTE_INTEGER")==0) {
 #ifdef DEBUG_MODE
         printf("DEBUG: GENERADO %s value(%s), type(%s)\n", (*tmpTS)->name, (*tmpTS)->value, (*tmpTS)->dataType);
 #endif // DEBUG_MODE
-            fprintf(archivo, "\t%-35s	DD	%s\n", estandarizar_nombre_ensamblador((*tmpTS)->value),(*tmpTS)->value);
+            fprintf(archivo, "\t%-35s	DD	%s.0\n", estandarizar_nombre_ensamblador((*tmpTS)->value, TYPE_INT),(*tmpTS)->value);
         }
         tmpTS = &(*tmpTS)->next;
     }
@@ -211,9 +280,9 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
             varName[1]='\0';
             strcat(varName, (*tmpTS)->value);
             strcat(varName, "\"");
-            tmpVar=estandarizar_nombre_ensamblador(varName);
-            fprintf(archivo, "\t%-50s\tDB  %s,'$'\n", tmpVar, varName);
-            fprintf(archivo, "\ts@%-48s\tEQU ($ - %s)\n", tmpVar, tmpVar);
+            tmpVar=estandarizar_nombre_ensamblador(varName, TYPE_STRING);
+            fprintf(archivo, "\t%-35s\tDB  %s,'$'\n", tmpVar, varName);
+            fprintf(archivo, "\ts@%-32s\tEQU ($ - %s)\n", tmpVar, tmpVar);
         } 
         tmpTS = &(*tmpTS)->next;
     }
@@ -271,13 +340,13 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
                       * _cte_str: constante declarada en el espacio de datos
                       * @usr_b: variable de usuario a la que se asigna el string
                       * s@_cte_str: size de la constante string, necesario para realizar la asignacion. */
-                    tmpVar=estandarizar_nombre_ensamblador(segOp);
+                    tmpVar=estandarizar_nombre_ensamblador(segOp, get_std_type(get_type_in_ts(tmpTS,segOp)));
                     fprintf(archivo, "\tassignToString %s, @usr_%s, s@%s\n",tmpVar,priOp,tmpVar);
 				} else {
 				    if (strcmp(segOp, "@tmp")==0) {
                         fprintf(archivo, "\tFSTP @usr_%s\n",priOp);
 				    } else {
-                        fprintf(archivo, "\tFLD %s\n",estandarizar_nombre_ensamblador(segOp));
+                        fprintf(archivo, "\tFLD %s\n",estandarizar_nombre_ensamblador(segOp,get_std_type(get_type_in_ts(tmpTS,segOp))));
                         fprintf(archivo, "\tFSTP @usr_%s\n",priOp);
                         // fprintf(archivo, "\tFFREE\n"); // no es necesario
 				    }
@@ -315,7 +384,7 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
 				} else if (strcmp(var_type, "INTEGER")==0) {
                     fprintf(archivo, "\tDisplayInteger @usr_%s\n\tnewLine 1\n",priOp);	// standardize var.
 				} else {
-                    fprintf(archivo, "\tdisplayString %s\n\tnewLine 1\n",estandarizar_nombre_ensamblador(priOp));	// standardize var.
+                    fprintf(archivo, "\tdisplayString %s\n\tnewLine 1\n",estandarizar_nombre_ensamblador(priOp, get_std_type(get_type_in_ts(tmpTS,priOp))));	// standardize var.
 				}
 
 			} else if (strcmp(polaca[i], "CMP")==0) {

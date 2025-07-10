@@ -9,39 +9,39 @@ MAXTEXTSIZE equ 50
 
 .DATA
 ; definicion de constantes float y enteras
-	_9999                              	DD	.9999
-	_1                                 	DD	1
-	_10                                	DD	10
-	_2                                 	DD	2
-	_2                                 	DD	2.
-	_2_5                               	DD	2.5
-	_27                                	DD	27
-	_3                                 	DD	3
-	_34                                	DD	34
-	_5                                 	DD	5
-	_500                               	DD	500
-	_6_0                               	DD	6.0
-	_99999_99                          	DD	99999.99
+	_float_9999                        	DD	.9999
+	_int_1                             	DD	1.0
+	_int_10                            	DD	10.0
+	_int_2                             	DD	2.0
+	_float_2                           	DD	2.
+	_float_2_5                         	DD	2.5
+	_int_27                            	DD	27.0
+	_int_3                             	DD	3.0
+	_int_34                            	DD	34.0
+	_int_5                             	DD	5.0
+	_int_500                           	DD	500.0
+	_float_6_0                         	DD	6.0
+	_float_99999_99                    	DD	99999.99
 
 ; definicion de constantes string
-	_sdadasjfla_dfg                                   	DB  "@sdADaSjfla%dfg",'$'
-	s@_sdadasjfla_dfg                                 	EQU ($ - _sdadasjfla_dfg)
-	_hola_mundo                                       	DB  "HOLA MUNDO!",'$'
-	s@_hola_mundo                                     	EQU ($ - _hola_mundo)
-	_a_es_mas_chico_o_igual_a_a1                      	DB  "a es mas chico o igual a a1",'$'
-	s@_a_es_mas_chico_o_igual_a_a1                    	EQU ($ - _a_es_mas_chico_o_igual_a_a1)
-	_a_es_mas_grande_que_a1                           	DB  "a es mas grande que a1",'$'
-	s@_a_es_mas_grande_que_a1                         	EQU ($ - _a_es_mas_grande_que_a1)
-	_asldk_fh_sjf                                     	DB  "asldk  fh sjf",'$'
-	s@_asldk_fh_sjf                                   	EQU ($ - _asldk_fh_sjf)
-	_d_no_es_mas_grande_que_c_check_not               	DB  "d no es mas grande que c. check NOT",'$'
-	s@_d_no_es_mas_grande_que_c_check_not             	EQU ($ - _d_no_es_mas_grande_que_c_check_not)
-	_muestro_hasta_que_c_sea_mayor_que_d              	DB  "muestro hasta que c sea mayor que d",'$'
-	s@_muestro_hasta_que_c_sea_mayor_que_d            	EQU ($ - _muestro_hasta_que_c_sea_mayor_que_d)
-	_var1_grande_que_d_o_c_mas_grande_d               	DB  "var1 grande que d o c mas grande d",'$'
-	s@_var1_grande_que_d_o_c_mas_grande_d             	EQU ($ - _var1_grande_que_d_o_c_mas_grande_d)
-	_variable1_y_c_son_mas_grandes_que_d              	DB  "variable1 y c son mas grandes que d",'$'
-	s@_variable1_y_c_son_mas_grandes_que_d            	EQU ($ - _variable1_y_c_son_mas_grandes_que_d)
+	_strh_3f6361cc                     	DB  "@sdADaSjfla%dfg",'$'
+	s@_strh_3f6361cc                  	EQU ($ - _strh_3f6361cc)
+	_strh_25d406d1                     	DB  "HOLA MUNDO!",'$'
+	s@_strh_25d406d1                  	EQU ($ - _strh_25d406d1)
+	_strh_357861d                      	DB  "a es mas chico o igual a a1",'$'
+	s@_strh_357861d                   	EQU ($ - _strh_357861d)
+	_strh_e9342091                     	DB  "a es mas grande que a1",'$'
+	s@_strh_e9342091                  	EQU ($ - _strh_e9342091)
+	_strh_8b8f1e89                     	DB  "asldk  fh sjf",'$'
+	s@_strh_8b8f1e89                  	EQU ($ - _strh_8b8f1e89)
+	_strh_a17ac89f                     	DB  "d no es mas grande que c. check NOT",'$'
+	s@_strh_a17ac89f                  	EQU ($ - _strh_a17ac89f)
+	_strh_e04b63a7                     	DB  "muestro hasta que c sea mayor que d",'$'
+	s@_strh_e04b63a7                  	EQU ($ - _strh_e04b63a7)
+	_strh_5254f02b                     	DB  "var1 grande que d o c mas grande d",'$'
+	s@_strh_5254f02b                  	EQU ($ - _strh_5254f02b)
+	_strh_4cecc9c0                     	DB  "variable1 y c son mas grandes que d",'$'
+	s@_strh_4cecc9c0                  	EQU ($ - _strh_4cecc9c0)
 
 ; definicion de variables
 	@usr_a                             	DD  ?
@@ -67,15 +67,15 @@ START:
 	MOV DS,AX
 	MOV ES,AX
 	FINIT; Inicializa el coprocesador
-	FLD _99999_99
+	FLD _float_99999_99
 	FSTP @usr_a
-	FLD _2
+	FLD _float_2
 	FSTP @usr_a
-	FLD _9999
+	FLD _float_9999
 	FSTP @usr_a1
-	FLD _6_0
+	FLD _float_6_0
 	FSTP @usr_b1
-	FLD _1
+	FLD _int_1
 	FLD @usr_b1
 	FMUL
 	FLD @usr_a
@@ -83,9 +83,9 @@ START:
 	FSTP @usr_x1
 	DisplayFloat @usr_x1,2
 	newLine 1
-	FLD _2_5
+	FLD _float_2_5
 	FSTP @usr_b1
-	FLD _10
+	FLD _int_10
 	FLD @usr_b1
 	FDIV
 	FLD @usr_a
@@ -93,11 +93,11 @@ START:
 	FSTP @usr_x1
 	DisplayFloat @usr_x1,2
 	newLine 1
-	assignToString _sdadasjfla_dfg, @usr_b, s@_sdadasjfla_dfg
-	assignToString _asldk_fh_sjf, @usr_p1, s@_asldk_fh_sjf
-	displayString _hola_mundo
+	assignToString _strh_3f6361cc, @usr_b, s@_strh_3f6361cc
+	assignToString _strh_8b8f1e89, @usr_p1, s@_strh_8b8f1e89
+	displayString _strh_25d406d1
 	newLine 1
-	displayString _a_es_mas_chico_o_igual_a_a1
+	displayString _strh_357861d
 	newLine 1
 	FLD @usr_a
 	FLD @usr_a1
@@ -106,18 +106,18 @@ START:
 	FSTSW AX
 	SAHF
 	JBE TAG_52
-	displayString _a_es_mas_grande_que_a1
+	displayString _strh_e9342091
 	newLine 1
 	JMP TAG_54
 TAG_52:
-	displayString _a_es_mas_chico_o_igual_a_a1
+	displayString _strh_357861d
 	newLine 1
 TAG_54:
-	FLD _5
+	FLD _int_5
 	FSTP @usr_variable1
-	FLD _1
+	FLD _int_1
 	FSTP @usr_d
-	FLD _2
+	FLD _int_2
 	FSTP @usr_c
 	FLD @usr_variable1
 	FLD @usr_d
@@ -133,14 +133,14 @@ TAG_54:
 	FSTSW AX
 	SAHF
 	JBE TAG_75
-	displayString _variable1_y_c_son_mas_grandes_que_d
+	displayString _strh_4cecc9c0
 	newLine 1
 TAG_75:
-	FLD _3
+	FLD _int_3
 	FSTP @usr_variable1
-	FLD _1
+	FLD _int_1
 	FSTP @usr_d
-	FLD _2
+	FLD _int_2
 	FSTP @usr_c
 	FLD @usr_variable1
 	FLD @usr_d
@@ -157,12 +157,12 @@ TAG_89:
 	FSTSW AX
 	SAHF
 	JBE TAG_96
-	displayString _var1_grande_que_d_o_c_mas_grande_d
+	displayString _strh_5254f02b
 	newLine 1
 TAG_96:
-	FLD _1
+	FLD _int_1
 	FSTP @usr_d
-	FLD _2
+	FLD _int_2
 	FSTP @usr_c
 	FLD @usr_d
 	FLD @usr_c
@@ -171,12 +171,12 @@ TAG_96:
 	FSTSW AX
 	SAHF
 	JA TAG_109
-	displayString _d_no_es_mas_grande_que_c_check_not
+	displayString _strh_a17ac89f
 	newLine 1
 TAG_109:
-	FLD _1
+	FLD _int_1
 	FSTP @usr_c
-	FLD _3
+	FLD _int_3
 	FSTP @usr_d
 TAG_115:
 	FLD @usr_c
@@ -186,24 +186,24 @@ TAG_115:
 	FSTSW AX
 	SAHF
 	JAE TAG_130
-	displayString _muestro_hasta_que_c_sea_mayor_que_d
+	displayString _strh_e04b63a7
 	newLine 1
 	FLD @usr_c
-	FLD _1
+	FLD _int_1
 	FADD
 	FSTP @usr_c
 	JMP TAG_115
 TAG_130:
-	FLD _27
+	FLD _int_27
 	FLD @usr_c
 	FSUB
 	FSTP @usr_x
 	FLD @usr_r
-	FLD _500
+	FLD _int_500
 	FADD
 	FSTP @usr_x
-	FLD _34
-	FLD _3
+	FLD _int_34
+	FLD _int_3
 	FMUL
 	FSTP @usr_x
 	FLD @usr_z
@@ -213,7 +213,7 @@ TAG_130:
 	FLD @usr_r
 	FLD @usr_j
 	FMUL
-	FLD _2
+	FLD _int_2
 	FSUB
 	FSTP @usr_x
 
