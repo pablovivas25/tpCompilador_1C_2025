@@ -155,11 +155,12 @@ const char* getTipoDatoVariable(tList *p, const char* nombreVar) {
 char* get_type_in_ts(tList *p, const char* nombreVar) {
 
     char nombreCTE[100];
+    char *tmpVarName = strdup(nombreVar);
     strcpy(nombreCTE, "_");
-    strcat(nombreCTE, nombreVar);
+    strcat(nombreCTE, deleteCharacter(tmpVarName));
     // busco la variable para determinar el tipo. pregunto por nombreVar||_cte(str|float|integer)
     while (*p) {
-        if (strcmp((*p)->name, nombreVar) == 0 || strcmp((*p)->name, nombreCTE) == 0) { 
+        if (strcmp((*p)->name, tmpVarName) == 0 || strcmp((*p)->name, nombreCTE) == 0) { 
             return (*p)->dataType;
         }
         p = &(*p)->next;

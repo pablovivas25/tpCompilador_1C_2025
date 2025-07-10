@@ -50,7 +50,7 @@ char* estandarizar_nombre_ensamblador(const char* nombre_original) {
     for (i = 0; nombre_original[i] != '\0'; i++) {
         char c = nombre_original[i];
 
-        if (isalnum(c) || c == '_') {
+        if (isalnum(c) || c == '_') { // isalnum devuelve 0 si c es [a-zA-Z0-9]
             // Caracteres alfanuméricos y guiones bajos son válidos
             // Convertir a minúsculas para consistencia (opcional)
             nombre_estandarizado[j++] = tolower(c);
@@ -120,45 +120,6 @@ int es_operador(char* elemento) {
 	return 0;
 }
 
-
-char* get_type(const char* element) {
-/** a, a1, b1, x1, z, f : Float
-    variable1, d, c, x, r, j : Int
-    b, p1, p2, p3 : String*/
-
-    char *arrayStr[]= {
-        "b", "p1", "p2", "p3", NULL // Marcador de fin de array
-    };
-    char *arrayFlt[]= {
-        "a", "a1", "b1", "x1", "z", "f", NULL // Marcador de fin de array
-    };
-    char *arrayInt[]= {
-        "variable1", "d", "c", "x", "r", "j", NULL // Marcador de fin de array
-    };
-    int i=0;
-    while (arrayStr[i] != NULL) {
-        if (strcmp(element,arrayStr[i])==0) {
-            return ("STRING");
-        }
-        i++;
-    }
-    i=0;
-    while (arrayFlt[i] != NULL) {
-        if (strcmp(element,arrayFlt[i])==0) {
-            return ("FLOAT");
-        }
-        i++;
-    }
-    i=0;
-    while (arrayInt[i] != NULL) {
-        if (strcmp(element,arrayInt[i])==0) {
-            return ("INTEGER");
-        }
-        i++;
-    }
-    return ("CTE_VARIABLE");
-}
-
 char* get_jump(char* operador) {
 	if (strcmp(operador, "BLT")==0) {
         return ("JB");
@@ -176,8 +137,8 @@ char* get_jump(char* operador) {
     return NULL;
 }
 
-void agregar_operando(FILE* archivo, const char* operando) {
-    if (startsWith(get_type(operando), "CTE_")==0) { //FALSO
+void agregar_operando(FILE* archivo, tList *ptrTS, const char* operando) {
+    if (startsWith(get_type_in_ts(ptrTS,operando), "CTE_")==0) { //FALSO
         fprintf(archivo, "\tFLD @usr_%s\n",operando);
     } else {
         fprintf(archivo, "\tFLD %s\n",estandarizar_nombre_ensamblador(operando));
@@ -192,7 +153,7 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
         return EXIT_FAILURE;
     }
 
-    const char *nombre_archivo = "Final.asm";
+    const char *nombre_archivo = "asm/Final.asm";
     printf("Intentando abrir/crear y limpiar el archivo '%s'...\n", nombre_archivo);
 
     // Abrir el archivo en modo "w" (write)
@@ -228,7 +189,7 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
 #ifdef DEBUG_MODE
         printf("DEBUG: GENERADO %s value(%s), type(%s)\n", (*tmpTS)->name, (*tmpTS)->value, (*tmpTS)->dataType);
 #endif // DEBUG_MODE
-            fprintf(archivo, "\t%-35s	DD	%s.0\n", estandarizar_nombre_ensamblador((*tmpTS)->value),(*tmpTS)->value);
+            fprintf(archivo, "\t%-35s	DD	%s\n", estandarizar_nombre_ensamblador((*tmpTS)->value),(*tmpTS)->value);
         }
         tmpTS = &(*tmpTS)->next;
     }
@@ -243,7 +204,7 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
         
         if (strcmp((*tmpTS)->dataType, "CTE_STRING")==0) {  
 #ifdef DEBUG_MODE
-        printf("ESTE ES %s value(%s), type(%s)\n", (*tmpTS)->name, (*tmpTS)->value, (*tmpTS)->dataType);
+        printf("DEBUG: ESTE ES %s value(%s), type(%s)\n", (*tmpTS)->name, (*tmpTS)->value, (*tmpTS)->dataType);
 #endif // DEBUG_MODE
 
             varName[0]='"';
@@ -263,7 +224,7 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
     while (*tmpTS) {
         if (strcmp((*tmpTS)->dataType, "STRING")==0) {           
 #ifdef DEBUG_MODE
-        printf("ESTa ES %s type(%s)\n", (*tmpTS)->name, (*tmpTS)->dataType);
+        printf("DEBUG: ESTa ES %s type(%s)\n", (*tmpTS)->name, (*tmpTS)->dataType);
 #endif // DEBUG_MODE
             fprintf(archivo, "\t@usr_%-30s\tDB	MAXTEXTSIZE dup (?),'$'\n", (*tmpTS)->name); /** DECLARACIÓN DE Asignación a STRING*/
         } else if (strcmp((*tmpTS)->dataType, "FLOAT")==0 || strcmp((*tmpTS)->dataType, "INTEGER")==0) {
@@ -290,6 +251,7 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
 	int salto=-1;
 	int codeOperador;
     int i;
+    tmpTS = ptrTS;
     for (i=0; i<rpn_size; i++) {
         // Escribir algo en el archivo
 		if (salto==i) {
@@ -303,7 +265,7 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
 			if (codeOperador == 5) { // operador de asignación '=:'
 				priOp=pop(&pilaASM);
 				segOp=pop(&pilaASM);
-				if (strcmp(get_type(priOp), "STRING")==0) {
+				if (strcmp(get_type_in_ts(tmpTS,priOp), "STRING")==0) {
                     /** Forma de asignar una constante a una variabla
                       * assignToString _cte_str, @usr_b, s@_cte_str: macro en macros2.asm
                       * _cte_str: constante declarada en el espacio de datos
@@ -325,12 +287,12 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
 			    priOp=pop(&pilaASM);
 			    if (strcmp(priOp, "@tmp")==0) {
                     //fprintf(archivo, "\tFLD @usr_%s\n",segOp);
-                    agregar_operando(archivo, segOp);
+                    agregar_operando(archivo, tmpTS, segOp);
 			    } else {
                     //fprintf(archivo, "\tFLD @usr_%s\n",priOp);
                     //fprintf(archivo, "\tFLD @usr_%s\n",segOp);
-                    agregar_operando(archivo, priOp);
-                    agregar_operando(archivo, segOp);
+                    agregar_operando(archivo, tmpTS, priOp);
+                    agregar_operando(archivo, tmpTS, segOp);
 			    }
 			    switch(codeOperador) {
                     case 1: fprintf(archivo, "\tFADD\n"); break;
@@ -344,7 +306,8 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
                 push(&pilaASM, "@tmp");
 			} else if (strcmp(polaca[i], "write")==0) {
 				priOp=pop(&pilaASM);
-				char *var_type=get_type(priOp);
+				char *var_type=get_type_in_ts(tmpTS,priOp);
+                //printf("obtuve (%s) para la variable %s\n", var_type, priOp);
 				if (strcmp(var_type, "STRING")==0) {
                     fprintf(archivo, "\tdisplayString @usr_%s\n\tnewLine 1\n",priOp);	// standardize var.
 				} else if (strcmp(var_type, "FLOAT")==0) {
@@ -366,8 +329,8 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
                 FCOM	; compara ST(0) con ST(1)
                 FSTSW AX	; mueve los bits c3 y c0 a FLAGS
                 SAHF*/
-                agregar_operando(archivo, priOp);
-                agregar_operando(archivo, segOp);
+                agregar_operando(archivo, tmpTS, priOp);
+                agregar_operando(archivo, tmpTS, segOp);
 
 				fprintf(archivo, "\tFXCH\n\tFCOM\n\tFSTSW AX\n\tSAHF\n");
 				i++; // me posiciono en el siguiente elemento

@@ -6,8 +6,6 @@ init {
     b, p1, p2, p3 : String
 }
 
-
-
 #+ asginaciones +#
 a := 99999.99
 a := 2.

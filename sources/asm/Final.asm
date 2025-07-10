@@ -10,16 +10,16 @@ MAXTEXTSIZE equ 50
 .DATA
 ; definicion de constantes float y enteras
 	_9999                              	DD	.9999
-	_1                                 	DD	1.0
-	_10                                	DD	10.0
-	_2                                 	DD	2.0
+	_1                                 	DD	1
+	_10                                	DD	10
+	_2                                 	DD	2
 	_2                                 	DD	2.
 	_2_5                               	DD	2.5
-	_27                                	DD	27.0
-	_3                                 	DD	3.0
-	_34                                	DD	34.0
-	_5                                 	DD	5.0
-	_500                               	DD	500.0
+	_27                                	DD	27
+	_3                                 	DD	3
+	_34                                	DD	34
+	_5                                 	DD	5
+	_500                               	DD	500
 	_6_0                               	DD	6.0
 	_99999_99                          	DD	99999.99
 

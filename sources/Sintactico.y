@@ -98,12 +98,8 @@ int verificar_y_contar_negs(char *);
 
 programa:
     sentencias { 
-        crearTS(&listaTS);
-        printf("\n################ Reverse Polish Notation ################\n");
-        mostrar_polaca();
-        printf("#########################################################\n");
-        printf("\n\n:: INICIANDO GENERACION CODIGO ASM ----------------------\n");
-        generar_assembler(&listaTS, rpn->vector_elements, rpn->vector_index);
+        contarIngresos++;
+        printf(" ---- entrando: %d\n",contarIngresos);
     }
     ;
 
@@ -641,9 +637,20 @@ int main(int argc, char *argv[])
     createList(&listaTS);
     createStack(&pilaVariables);
     createStack(&pilaTipoDatoVariable);
-    
     yyparse();
+
     
+
+    // -------------------- Acciones despues de compilar
+    crearTS(&listaTS);
+    printf("\n################ Reverse Polish Notation ################\n");
+    mostrar_polaca();
+    printf("#########################################################\n");
+
+    printf("\n\n:: INICIANDO GENERACION CODIGO ASM ----------------------\n");
+    generar_assembler(&listaTS, rpn->vector_elements, rpn->vector_index);
+    // --------------------
+
     printf("\nCOMPILACION EXITOSA\n");
 
     fclose(yyin);
