@@ -1,28 +1,10 @@
 _______________________________________________________________________________
 |NOMBRE                   |TIPODATO      |VALOR                    |LONGITUD  |
 _______________________________________________________________________________
-|_.9999                   |CTE_FLOAT     |.9999                    |0         |
 |_1                       |CTE_INTEGER   |1                        |0         |
-|_10                      |CTE_INTEGER   |10                       |0         |
 |_2                       |CTE_INTEGER   |2                        |0         |
-|_2.                      |CTE_FLOAT     |2.                       |0         |
-|_2.5                     |CTE_FLOAT     |2.5                      |0         |
-|_27                      |CTE_INTEGER   |27                       |0         |
 |_3                       |CTE_INTEGER   |3                        |0         |
-|_34                      |CTE_INTEGER   |34                       |0         |
-|_5                       |CTE_INTEGER   |5                        |0         |
-|_500                     |CTE_INTEGER   |500                      |0         |
-|_6.0                     |CTE_FLOAT     |6.0                      |0         |
-|_99999.99                |CTE_FLOAT     |99999.99                 |0         |
-|_@sdADaSjfla%dfg         |CTE_STRING    |@sdADaSjfla%dfg          |15        |
-|_HOLA MUNDO!             |CTE_STRING    |HOLA MUNDO!              |11        |
-|_a es mas chico o igual a a1|CTE_STRING    |a es mas chico o igual a a1|27        |
-|_a es mas grande que a1  |CTE_STRING    |a es mas grande que a1   |22        |
-|_asldk  fh sjf           |CTE_STRING    |asldk  fh sjf            |13        |
-|_d no es mas grande que c. check NOT|CTE_STRING    |d no es mas grande que c. check NOT|35        |
-|_muestro hasta que c sea mayor que d|CTE_STRING    |muestro hasta que c sea mayor que d|35        |
-|_var1 grande que d o c mas grande d|CTE_STRING    |var1 grande que d o c mas grande d|34        |
-|_variable1 y c son mas grandes que d|CTE_STRING    |variable1 y c son mas grandes que d|35        |
+|_9                       |CTE_INTEGER   |9                        |0         |
 |a                        |FLOAT         |                         |0         |
 |a1                       |FLOAT         |                         |0         |
 |b                        |STRING        |                         |0         |

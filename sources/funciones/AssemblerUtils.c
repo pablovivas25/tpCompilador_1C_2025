@@ -214,6 +214,56 @@ void agregar_operando(FILE* archivo, tList *ptrTS, const char* operando) {
     }
 }
 
+char** obtener_reorder_list(char** polaca, int size, PilaEstatica* pilaASM) {
+    int i,j=0,contArg;
+    char *priOp;
+    char *segOp;
+    char **reorder_list= (char**)malloc(cont_fct_reord * sizeof(char*));
+    char buffer[50];
+
+    for (i=0;i<size;i++) {
+        if(strcmp(polaca[i],"RORD")==0) {
+            reorder_list[j] = (char*)malloc(MAX_LENGTH_RORD * sizeof(char)); // Cada string puede tener MAX_LENGTH_RORD chars
+            reorder_list[j][0]='\0';
+            //sprintf(reorder_list[j], "\t%-35s_%d\tDB	\"[","@sys_RORD", i); // ¡Peligro de desbordamiento!
+            snprintf(buffer, 50, "@sys_RORD_%d", i);
+            snprintf(reorder_list[j], MAX_LENGTH_RORD, "\t%-35s\tDB	\"[", buffer);
+            i++;
+            contArg=0;
+            while (strcmp(polaca[i],"f@end")!=0 && i<size) {
+                if(es_operador(polaca[i])) {
+                    if (contArg==2) {
+                        segOp=pop(pilaASM);
+                        priOp=pop(pilaASM);
+                        strcat(reorder_list[j],priOp);
+                        strcat(reorder_list[j],polaca[i]);
+                        strcat(reorder_list[j],segOp);
+                        contArg=0;
+                    } else {
+                        priOp=pop(pilaASM);
+                        strcat(reorder_list[j],polaca[i]);
+                        strcat(reorder_list[j],priOp);
+                    }
+                    if (strcmp(polaca[i+1],",")==0) {
+                        strcat(reorder_list[j],",");
+                    }
+                } else {
+                    if (strcmp(polaca[i],",")!=0) {
+                        push(pilaASM, polaca[i]);
+                        contArg++;
+                    }
+                }
+                i++;
+            }
+            strcat(reorder_list[j],"]\",'$'\n");
+            //fprintf(archivo, "\t%-35s\tDB	%s", tmpVar, reorder_list[i]);
+            j++;
+        }
+    }
+    reorder_list[j]=NULL;
+    return reorder_list;
+}
+
 int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
     if (rpn_size>0) {
         printf("La polaca tiene %d ELEMENTOS\n\n",rpn_size);
@@ -221,6 +271,12 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
         printf("La polaca NO tiene ELEMENTOS: size %d\n\n",rpn_size);
         return EXIT_FAILURE;
     }
+
+    /** ############################################################ */
+    PilaEstatica pilaASM;
+    int capacidad_pila = 1000; // Definimos una capacidad fija de 1000 elementos
+    int i;
+    inicializarPila(&pilaASM, capacidad_pila);
 
     const char *nombre_archivo = "asm/Final.asm";
     printf("Intentando abrir/crear y limpiar el archivo '%s'...\n", nombre_archivo);
@@ -288,6 +344,16 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
     }
     fprintf(archivo, "\n"); // FIN DE CONSTANTES STRING
 
+    /** DECLARACIÓN DE STRING DE REORDER */
+    char **reorder_list=obtener_reorder_list(polaca, rpn_size, &pilaASM);
+    i=0;
+    while (reorder_list[i] != NULL) {
+        fprintf(archivo, "%s", reorder_list[i]);
+        i++;
+    }
+
+    fprintf(archivo, "\n");
+
     fprintf(archivo, "; definicion de variables\n");
     tmpTS = ptrTS;
     while (*tmpTS) {
@@ -305,11 +371,6 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
         tmpTS = &(*tmpTS)->next;
     }
 
-    /** ############################################################ */
-    PilaEstatica pilaASM;
-    int capacidad_pila = 1000; // Definimos una capacidad fija de 1000 elementos
-
-    inicializarPila(&pilaASM, capacidad_pila);
     /** Empezar a trabajar sobre la polaca */
     fprintf(archivo, "\n.CODE\n");
     fprintf(archivo, "START:\n"
@@ -319,7 +380,6 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
             "\tFINIT; Inicializa el coprocesador\n");
 	int salto=-1;
 	int codeOperador;
-    int i;
     tmpTS = ptrTS;
     for (i=0; i<rpn_size; i++) {
         // Escribir algo en el archivo
@@ -420,6 +480,9 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
 			fprintf(archivo, "TAG_%d:\n",i+1);
 		} else if (strcmp(polaca[i], "ET")==0) {
             fprintf(archivo, "TAG_%d:\n",i);
+        } else if (strcmp(polaca[i], "RORD")==0) {
+            fprintf(archivo, "\tdisplayString @sys_RORD_%d\n\tnewLine 1\n",i);
+            for(;strcmp(polaca[i],"f@end")!=0;i++) ;
         } else {
             push(&pilaASM, polaca[i]);
         }

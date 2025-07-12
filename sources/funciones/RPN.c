@@ -109,9 +109,16 @@ int posicion_polaca_actual() {
 }
 
 int reordenar_polaca(int posPivot, int cantArgREORDER, int sentido) {
+    if (sentido==SENTIDO_IZQ && posPivot==0) {
+        return 0; // NADA QUE ORDENAR
+    }
+    if (sentido==SENTIDO_DER && posPivot==cantArgREORDER) {
+        return 0; // NADA QUE ORDENAR
+    }
+
     int posIni, posFin, posExpIni, posExpFin, tmpIndex;
     desapilar_indice(&posFin);
-    posFin--;
+    posFin=posFin-2;
     posExpFin=posFin;
     while(cantArgREORDER>=posPivot) {
         desapilar_indice(&tmpIndex);
@@ -129,12 +136,17 @@ int reordenar_polaca(int posPivot, int cantArgREORDER, int sentido) {
     }
     desapilar_indice(&posIni);
 
-    int totalElementos=(posFin-posIni)+1;
+    int totalElementos=(posFin-posIni)+2;
     char **elementosArg=(char**) malloc (totalElementos*sizeof (char*));
     int i,j=0;
     if (sentido==SENTIDO_IZQ) {
         for(i=posExpIni;i<=posExpFin;i++) {
             elementosArg[j]=rpn->vector_elements[i];
+            j++;
+        }
+        //printf("     ante-ultimo-elemento \"%s\"\n",elementosArg[j-1]);
+        if (strcmp(elementosArg[j-1], ",")!=0) {
+            elementosArg[j] = ",";
             j++;
         }
         for(i=posIni;i<=posFin;i++) {
@@ -150,6 +162,11 @@ int reordenar_polaca(int posPivot, int cantArgREORDER, int sentido) {
                 j++;
             }
         }
+        //printf("     ante-ultimo-elemento \"%s\"\n",elementosArg[j-1]);
+        if (strcmp(elementosArg[j-1], ",")!=0) {
+            elementosArg[j] = ",";
+            j++;
+        }
         for(i=posExpIni;i<=posExpFin;i++) {
             elementosArg[j]=rpn->vector_elements[i];
             j++;
@@ -160,6 +177,7 @@ int reordenar_polaca(int posPivot, int cantArgREORDER, int sentido) {
         rpn->vector_elements[i]=elementosArg[j];
         j++;
     }
+    return 0;
 }
 
 char* buscar_en_polaca(char *var) { // implementar busqueda de la variable en el vector

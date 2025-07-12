@@ -2,6 +2,10 @@
 #define ASSEMBLERUTILS_H_INCLUDED
 #include "lista.h"
 
+#define MAX_LENGTH_RORD 100
+
+extern int cont_fct_reord;
+
 // --- Nueva enumeración para Tipos de Variable ---
 typedef enum {
     TYPE_INT,

@@ -8,6 +8,7 @@
 #include "./funciones/pila.c"
 #include "./funciones/RPN.c"
 #include "./funciones/AssemblerUtils.h"
+#define ASM_ACTIVE
 
 enum CLAUSE_LIST {
     IF_CLAUSE,
@@ -30,6 +31,7 @@ int contArgREORDER=0;
 int contArgCALNEG=0;
 int primerNeg=0;
 int contarIngresos=0;
+int cont_fct_reord=0;
 enum CLAUSE_LIST clauseType;
 
 int yyerror();
@@ -116,7 +118,7 @@ sentencia:
     | asignacion
     | asignacion_operacion_aritmetica
     | asignacion_negativeCalculation
-    | funcion_reorder;
+    | funcion_reorder { cont_fct_reord++; };
 
 declaracion:
     declaracion_init { printf("Bloque declaracion INIT\n"); };
@@ -575,6 +577,7 @@ funcion_reorder:
     COMA BOOL COMA CTE_INTEGER PC 
     { 
         int sentido; //devuelve 1
+        printf("--> tengo valor %s\n",$9);
         if (strcmp($9,"true")==0) {
             sentido=1;
         } else if (strcmp($9,"false")==0) {
@@ -588,6 +591,7 @@ funcion_reorder:
         }
         //actualizar_elemento_en_polaca(posPIVOT,"FIN REORD");
         reordenar_polaca(posPIVOT, contArgREORDER, sentido);
+        insertar_en_polaca("f@end");
         printf("Sintactico --> funcion reorder\n");
     };
 
@@ -596,18 +600,18 @@ funcion_reorder:
 lista_expresiones:
     lista_expresiones COMA expresion 
     { 
+        printf("    R3. LE COMA E ");
         contArgREORDER++; 
+        insertar_en_polaca(",");
         tmpIndex=posicion_polaca_actual();
         apilar_indice(tmpIndex);
-        if(contArgREORDER!=1)
-         insertar_en_polaca(",");
     }
     | expresion 
     { 
+        printf("    R4. E ");
+        insertar_en_polaca(",");
         tmpIndex=posicion_polaca_actual();
         apilar_indice(tmpIndex); 
-        if(contArgREORDER!=1)
-          insertar_en_polaca(",");
     };
     
 %%
@@ -647,8 +651,10 @@ int main(int argc, char *argv[])
     mostrar_polaca();
     printf("#########################################################\n");
 
+#ifdef ASM_ACTIVE
     printf("\n\n:: INICIANDO GENERACION CODIGO ASM ----------------------\n");
     generar_assembler(&listaTS, rpn->vector_elements, rpn->vector_index);
+#endif // ASM_ACTIVE
     // --------------------
 
     printf("\nCOMPILACION EXITOSA\n");
