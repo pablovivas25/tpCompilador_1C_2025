@@ -1,0 +1,29 @@
+#+ Declaracion +#
+
+init {
+    a, a1, b1, x1, z, f: Float
+    variable1, d, c, x, r, j: Int
+    b, p1, p2, p3 : String
+}
+
+
+#+ TEMA ESPECIAL REORDER +#
+
+reorder([x + 3, 1 + 1, 9 - x],true,2)  #+ la primer posicion es cero +#
+#+ [9-x, 1+1, x+3]  luego de reordenar +#
+
+reorder([x + 3, 1 + 1, 9 - x],true,0)  #+ mismo resultado, nada que reordenar +#
+#+ [x+3, 1+1, 9-x]  luego de reordenar +#
+
+reorder([x + 3, 1 + 1, 9 - x],true,1)  #+ posicion intermedia +#
+#+ [1+1, x+3, 9-x]  luego de reordenar +#
+
+reorder([r * j - 2, x + 3, 1 + 1, 9 - x], false,2)  #+ la primer posicion es cero +#
+#+ [r*j-2, x+3, 9-x, 1+1]  luego de reordenar +#
+
+reorder([r * j - 2, x + 3, 1 + 1, 9 - x], false,3)  #+ sin cambios +#
+#+ [r*j-2, x+3, 1+1, 9-x]  luego de reordenar +#
+
+reorder([r * j - 2, x + 3, 1 + 1, 9 - x], false,0)  #+ reorder max al extremo izq a la der +#
+#+ [x+3, 1+1, 9-x, r*j-2]  luego de reordenar +#
+

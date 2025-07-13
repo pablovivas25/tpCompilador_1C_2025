@@ -8,7 +8,7 @@
 #include "./funciones/pila.c"
 #include "./funciones/RPN.c"
 #include "./funciones/AssemblerUtils.h"
-#define ASM_ACTIVE
+//#define ASM_ACTIVE
 
 enum CLAUSE_LIST {
     IF_CLAUSE,
@@ -40,6 +40,7 @@ extern char* yytext;
 extern int yylineno;
 
 int verificar_y_contar_negs(char *);
+void insertar_NegCalc(char *);
 %}
 
 %union{
@@ -490,7 +491,7 @@ asignacion_operacion_aritmetica:
         free($3);
     };
 
-asignacion_negativeCalculation:
+/*asignacion_negativeCalculation:
     ID OP_AS_NEG_CALC NEGATIVECALCULATION 
     { contArgCALNEG=0; primerNeg=0; insertar_en_polaca("NCALC"); }
     PA lista_params PC 
@@ -524,7 +525,180 @@ asignacion_negativeCalculation:
         printf("Sintactico --> funcion negativeCalculation\n");
     };
 
+
+    ID OP_AS_NEG_CALC NEGATIVECALCULATION 
+    { contArgCALNEG=0; }
+    PA lista_params PC 
+    {
+        const char* tipoID = getTipoDatoVariable(&listaTS, $1);
+        const char* tipoResultado = (contArgCALNEG % 2 == 0) ? "FLOAT" : "INTEGER";
+
+        char operador[2];
+        if (contArgCALNEG%2==0) {
+            strcpy(operador, "+");
+        } else {
+            strcpy(operador, "*");
+        }
+        contArgCALNEG--;
+        while(contArgCALNEG>0) {
+            desapilar_indice(&tmpIndex);
+            actualizar_elemento_en_polaca(tmpIndex, operador);
+            contArgCALNEG--;
+        }
+
+        if (!tipoID) {
+            printf("ERROR: Variable '%s' no fue declarada.\n", $1);
+            exit(1);
+        } else if (strcmp(tipoID, tipoResultado) != 0 && !(strcmp(tipoID, "FLOAT") == 0 && strcmp(tipoResultado, "INTEGER") == 0)) {
+            printf("ERROR: Tipos incompatibles: '%s' es %s y el resultado es %s\n", $1, tipoID, tipoResultado);
+            exit(1);
+        }
+
+        insertar_en_polaca($1);
+        insertar_en_polaca("=");
+        printf("Sintactico --> funcion negativeCalculation\n");
+    };
+
+*/
+asignacion_negativeCalculation:
+    ID OP_AS_NEG_CALC NEGATIVECALCULATION 
+    { contArgCALNEG=0; primerNeg=0; insertar_en_polaca("0");insertar_en_polaca("sumaNeg");insertar_en_polaca("=");insertar_en_polaca("0");insertar_en_polaca("contArgCALNEG");insertar_en_polaca("=");insertar_en_polaca("1");insertar_en_polaca("multNeg");insertar_en_polaca("="); insertar_en_polaca("NCALC");}
+    PA lista_params PC 
+    { 
+        //if (contArgCALNEG%2==0)
+        insertar_en_polaca("contArgCALNEG");
+        insertar_en_polaca("2");
+        insertar_en_polaca("%");
+        insertar_en_polaca("contArgCALNEG");
+        insertar_en_polaca("=");
+        insertar_en_polaca("0");
+        insertar_en_polaca("CMP");
+        insertar_en_polaca("BNE");
+        tmpIndex2=posicion_polaca_actual();
+        apilar_indice(tmpIndex2);
+        avanzar_polaca();
+
+        //parte verdadera
+        insertar_en_polaca("sumNeg");
+        insertar_en_polaca($1);
+        insertar_en_polaca("=");
+
+        //BI
+        insertar_en_polaca("BI"); 
+        desapilar_indice(&tmpIndex2);
+        actualizar_polaca(tmpIndex2, 1);//?
+        tmpIndex2=posicion_polaca_actual();
+        apilar_indice(tmpIndex2);
+        avanzar_polaca();
+
+        //parte falsa
+        insertar_en_polaca("multNeg");
+        insertar_en_polaca($1);
+        insertar_en_polaca("=");
+        desapilar_indice(&tmpIndex2);
+        actualizar_polaca(tmpIndex2, 0);//?
+
+        insertar_en_polaca("FIN_NCALC");
+        printf("Sintactico --> funcion negativeCalculation\n");
+    };
+
 lista_params:
+    lista_params COMA CTE_INTEGER 
+     {
+        if(atof($3)<0){
+            contArgCALNEG++;
+            insertar_NegCalc($3);
+
+            desapilar_indice(&tmpIndex);
+            int offset=posicion_polaca_actual();
+            actualizar_polaca(tmpIndex,0);
+        }
+     }
+    | lista_params COMA CTE_FLOAT 
+     {
+        if(atof($3)<0){
+            contArgCALNEG++;
+            insertar_NegCalc($3);
+
+            desapilar_indice(&tmpIndex);
+            int offset=posicion_polaca_actual();
+            actualizar_polaca(tmpIndex,0);
+            //actualizar_polaca(tmpIndex,(tmpIndex-offset+1));
+        }
+        /*if (verificar_y_contar_negs($3)) {
+            tmpIndex=posicion_polaca_actual();
+            if (primerNeg) {
+                apilar_indice(tmpIndex); 
+                avanzar_polaca();
+            } else {
+                primerNeg=1;
+            }
+        }*/
+     }
+    | lista_params COMA ID 
+     {
+        char *value=buscar_en_polaca($3);
+        if(atof(value)<0){
+            contArgCALNEG++;
+        }
+        insertar_en_polaca($3);
+        insertar_en_polaca("0");
+        insertar_en_polaca("CMP");
+        insertar_en_polaca("BGE");
+        tmpIndex2=posicion_polaca_actual();
+        apilar_indice(tmpIndex2);
+        avanzar_polaca();
+        
+        insertar_NegCalc($3);
+
+        desapilar_indice(&tmpIndex2);
+        actualizar_polaca(tmpIndex2, 0);//?*/
+        
+
+     }
+    | CTE_INTEGER
+     {
+         if(atof($1)<0){
+            insertar_NegCalc($1);
+
+            desapilar_indice(&tmpIndex);
+            int offset=posicion_polaca_actual();
+            actualizar_polaca(tmpIndex,(tmpIndex-offset+1));
+        }
+     }
+    | CTE_FLOAT
+     { 
+        if(atof($1)<0){
+            insertar_NegCalc($1);
+
+            desapilar_indice(&tmpIndex);
+            int offset=posicion_polaca_actual();
+            actualizar_polaca(tmpIndex,(tmpIndex-offset+1));
+            //apilar_indice(tmpIndex);
+        }
+     }
+    | ID 
+     {
+        char *value=buscar_en_polaca($1);
+        if(atof(value)<0){
+            contArgCALNEG++;
+        }
+        insertar_en_polaca($1);
+        insertar_en_polaca("0");
+        insertar_en_polaca("CMP");
+        insertar_en_polaca("BGE");
+        tmpIndex2=posicion_polaca_actual();
+        apilar_indice(tmpIndex2);
+        avanzar_polaca();
+        
+        insertar_NegCalc($1);
+
+        desapilar_indice(&tmpIndex2);
+        actualizar_polaca(tmpIndex2, 0);//?*/
+        
+     };
+
+/*lista_params:
     lista_params COMA CTE_INTEGER 
     | lista_params COMA CTE_FLOAT 
     {
@@ -565,7 +739,7 @@ lista_params:
             primerNeg=1;
         }
     };
-
+*/
 funcion_reorder:     
     REORDER PA 
     {
@@ -615,6 +789,27 @@ lista_expresiones:
     };
     
 %%
+
+void insertar_NegCalc(char *value){ //inserto en polaca contArgCALNEG++, multNeg y sumaNeg
+    insertar_en_polaca(value);
+    insertar_en_polaca("sumaNeg");
+    insertar_en_polaca("+");
+    insertar_en_polaca("sumaNeg");
+    insertar_en_polaca("=");
+
+    insertar_en_polaca(value);
+    insertar_en_polaca("multNeg");
+    insertar_en_polaca("*");
+    insertar_en_polaca("multNeg");
+    insertar_en_polaca("=");
+
+    //contArgCALNEG++;
+    insertar_en_polaca("contArgCALNEG");
+    insertar_en_polaca("1");
+    insertar_en_polaca("+");
+    insertar_en_polaca("contArgCALNEG");
+    insertar_en_polaca("=");
+}
 
 int verificar_y_contar_negs(char *arg) {
     int floatNegativo=0;

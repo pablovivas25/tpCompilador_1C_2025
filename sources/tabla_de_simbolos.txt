@@ -1,24 +1,12 @@
 _______________________________________________________________________________
 |NOMBRE                   |TIPODATO      |VALOR                    |LONGITUD  |
 _______________________________________________________________________________
-|_1                       |CTE_INTEGER   |1                        |0         |
-|_2                       |CTE_INTEGER   |2                        |0         |
-|_3                       |CTE_INTEGER   |3                        |0         |
-|_9                       |CTE_INTEGER   |9                        |0         |
+|_-1.5                    |CTE_FLOAT     |-1.5                     |0         |
+|_-1.7                    |CTE_FLOAT     |-1.7                     |0         |
+|_4.1                     |CTE_FLOAT     |4.1                      |0         |
 |a                        |FLOAT         |                         |0         |
 |a1                       |FLOAT         |                         |0         |
-|b                        |STRING        |                         |0         |
+|b                        |FLOAT         |                         |0         |
 |b1                       |FLOAT         |                         |0         |
-|c                        |INTEGER       |                         |0         |
-|d                        |INTEGER       |                         |0         |
-|f                        |FLOAT         |                         |0         |
-|j                        |INTEGER       |                         |0         |
-|p1                       |STRING        |                         |0         |
-|p2                       |STRING        |                         |0         |
-|p3                       |STRING        |                         |0         |
-|r                        |INTEGER       |                         |0         |
-|variable1                |INTEGER       |                         |0         |
-|x                        |INTEGER       |                         |0         |
-|x1                       |FLOAT         |                         |0         |
-|z                        |FLOAT         |                         |0         |
+|c                        |FLOAT         |                         |0         |
 _______________________________________________________________________________
