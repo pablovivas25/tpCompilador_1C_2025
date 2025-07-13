@@ -10,12 +10,12 @@
 #include "./funciones/AssemblerUtils.h"
 //#define ASM_ACTIVE
 
-enum CLAUSE_LIST {
+typedef enum {
     IF_CLAUSE,
     WHILE_CLAUSE,
     NOT_CONDITION,
     OR_CONDITION
-};
+} CLAUSE_LIST;
 
 int yystopparser=0;
 FILE  *yyin;
@@ -29,13 +29,10 @@ int tmpIndex, tmpIndex2;
 int contAND=0, contOR=0;
 int contArgREORDER=0;
 int contArgCALNEG=0;
-int primerNeg=0;
 int contarIngresos=0;
 int cont_fct_reord=0;
 
-float sumFloat=0.0;
-float multFloat=1.0;
-enum CLAUSE_LIST clauseType;
+CLAUSE_LIST clauseType;
 
 int yyerror();
 int yylex();    
@@ -497,42 +494,50 @@ asignacion_operacion_aritmetica:
 
 asignacion_negativeCalculation:
     ID OP_AS_NEG_CALC NEGATIVECALCULATION 
-    { contArgCALNEG=0; primerNeg=0; insertar_en_polaca("0");insertar_en_polaca("sumaNeg");insertar_en_polaca("=");insertar_en_polaca("0");insertar_en_polaca("contArgCALNEG");insertar_en_polaca("=");insertar_en_polaca("1");insertar_en_polaca("multNeg");insertar_en_polaca("="); insertar_en_polaca("NCALC");}
+    { 
+        contArgCALNEG=0; 
+        insertar_en_polaca("NCALC");
+        insertar_en_polaca("0");
+        insertar_en_polaca("@sumaNeg");
+        insertar_en_polaca("=");
+        insertar_en_polaca("0");
+        insertar_en_polaca("@contArgCALNEG");insertar_en_polaca("=");
+        insertar_en_polaca("1");insertar_en_polaca("@multNeg");insertar_en_polaca("="); }
     PA lista_params PC 
     { 
-        //if (contArgCALNEG%2==0)
-        insertar_en_polaca("contArgCALNEG");
+        //if (@contArgCALNEG%2==0)
+        insertar_en_polaca("@contArgCALNEG");
         insertar_en_polaca("2");
         insertar_en_polaca("%");
-        insertar_en_polaca("aux"); //variable auxiliar para guardar el resultado del resto
+        insertar_en_polaca("@aux"); //variable auxiliar para guardar el resultado del resto
         insertar_en_polaca("=");
-        insertar_en_polaca("aux"); 
+        insertar_en_polaca("@aux"); 
         insertar_en_polaca("0");
         insertar_en_polaca("CMP");
         insertar_en_polaca("BNE");
-        tmpIndex2=posicion_polaca_actual();
-        apilar_indice(tmpIndex2);
+        tmpIndex=posicion_polaca_actual();
+        apilar_indice(tmpIndex);
         avanzar_polaca();
 
         //parte verdadera, si es par
-        insertar_en_polaca("sumNeg");
+        insertar_en_polaca("@sumNeg");
         insertar_en_polaca($1);
         insertar_en_polaca("=");
 
         //BI
         insertar_en_polaca("BI"); 
-        desapilar_indice(&tmpIndex2);
-        actualizar_polaca(tmpIndex2, 1);//?
-        tmpIndex2=posicion_polaca_actual();
-        apilar_indice(tmpIndex2);
+        desapilar_indice(&tmpIndex);
+        actualizar_polaca(tmpIndex, 1);
+        tmpIndex=posicion_polaca_actual();
+        apilar_indice(tmpIndex);
         avanzar_polaca();
 
         //parte falsa, si es impar
-        insertar_en_polaca("multNeg");
+        insertar_en_polaca("@multNeg");
         insertar_en_polaca($1);
         insertar_en_polaca("=");
-        desapilar_indice(&tmpIndex2);
-        actualizar_polaca(tmpIndex2, 0);//?
+        desapilar_indice(&tmpIndex);
+        actualizar_polaca(tmpIndex, 0);
 
         insertar_en_polaca("FIN_NCALC");
         printf("Sintactico --> funcion negativeCalculation\n");
@@ -544,10 +549,6 @@ lista_params:
      {
         if(atof($3)<0){
             insertar_NegCalc($3);
-
-            desapilar_indice(&tmpIndex);
-            int offset=posicion_polaca_actual();
-            actualizar_polaca(tmpIndex,0);
         }
      }
     | lista_params COMA ID 
@@ -571,10 +572,6 @@ lista_params:
      { 
         if(atof($1)<0){
             insertar_NegCalc($1);
-
-            desapilar_indice(&tmpIndex);
-            int offset=posicion_polaca_actual();
-            actualizar_polaca(tmpIndex,(tmpIndex-offset+1));
         }
      }
     | ID 
@@ -629,7 +626,6 @@ funcion_reorder:
 lista_expresiones:
     lista_expresiones COMA expresion 
     { 
-        printf("    R3. LE COMA E ");
         contArgREORDER++; 
         insertar_en_polaca(",");
         tmpIndex=posicion_polaca_actual();
@@ -637,7 +633,6 @@ lista_expresiones:
     }
     | expresion 
     { 
-        printf("    R4. E ");
         insertar_en_polaca(",");
         tmpIndex=posicion_polaca_actual();
         apilar_indice(tmpIndex); 
@@ -645,35 +640,25 @@ lista_expresiones:
     
 %%
 
-void insertar_NegCalc(char *value){ //inserto en polaca contArgCALNEG++, multNeg y sumaNeg
+void insertar_NegCalc(char *value){ //inserto en polaca @contArgCALNEG++, multNeg y @sumaNeg
     insertar_en_polaca(value);
-    insertar_en_polaca("sumaNeg");
+    insertar_en_polaca("@sumaNeg");
     insertar_en_polaca("+");
-    insertar_en_polaca("sumaNeg");
+    insertar_en_polaca("@sumaNeg");
     insertar_en_polaca("=");
 
     insertar_en_polaca(value);
-    insertar_en_polaca("multNeg");
+    insertar_en_polaca("@multNeg");
     insertar_en_polaca("*");
-    insertar_en_polaca("multNeg");
+    insertar_en_polaca("@multNeg");
     insertar_en_polaca("=");
 
     contArgCALNEG++;
-    insertar_en_polaca("contArgCALNEG");
+    insertar_en_polaca("@contArgCALNEG");
     insertar_en_polaca("1");
     insertar_en_polaca("+");
-    insertar_en_polaca("contArgCALNEG");
+    insertar_en_polaca("@contArgCALNEG");
     insertar_en_polaca("=");
-}
-
-int verificar_y_contar_negs(char *arg) {
-    int floatNegativo=0;
-    if (arg[0]=='-') {
-        contArgCALNEG++;
-        insertar_en_polaca(arg);
-        floatNegativo=1;
-    }
-    return floatNegativo;
 }
 
 int main(int argc, char *argv[])

@@ -9,15 +9,7 @@ a := 4.1
 b := -1.5
 c := -1.7
 
-x = negativeCalculation(-2.0, a, c)		 #+ caso todos son id´s +#
+x = negativeCalculation(-2.0, -2.3, c)		 #+ caso todos son id´s +#
 #+ Cantidad de negativos: 2 (par) +#
 #+ x := (-1.5) + (-1.7) = -3.2 +#
-
-x = negativeCalculation(1, 2.2, 5.0)  		 #+ caso todos son cte´s positivas +#
-#+ Cantidad de negativos: 0 (par) +#
-#+ x := 0 +#
-
-x = negativeCalculation(-3, -5.0, -2.0) 	 #+ caso  todos son cte´s negativas +#
-#+ Cantidad de negativos: 3 (impar) +#
-#+ x := (-3.0) * (-5.0) * (-2.0) = -30.0 +#
 
