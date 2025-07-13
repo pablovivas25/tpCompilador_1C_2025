@@ -1,0 +1,12 @@
+#+ Declaracion +#
+
+init {
+    a, a1, b, c, x1, z, f: Float
+}
+
+a := 4.1
+b := -1.5
+
+x = negativeCalculation(-2.2, b, -1.0)  		 #+ caso todos son cte´s positivas +#
+#+ Cantidad de negativos: 0 (par) +#
+#+ x := 0 +#

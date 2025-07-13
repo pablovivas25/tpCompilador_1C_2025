@@ -1,8 +1,8 @@
 #+ Declaracion +#
 
 init {
-    a, a1, b1 : Float
-    variable1 : Int
+    a, a1, b1, x1, c, x, r: Float
+    variable1, b0, r, j : Int
     b, p1, p2, p3 : String
 }
 
@@ -12,7 +12,7 @@ a := 2.
 a1 := .9999
 
 b1 := 6.0
-x1 =: 1 * b1 + a
+x1 =: 1.0 * b1 + a
 write(x1)
 b1 := 2.5
 x1 =: 10 / b1 + a
@@ -33,38 +33,38 @@ else
 
 #+ Ejemplo AND +#
 variable1 := 5
-a := 1
-b := 1
+a := 1.0
+b0 := 1
 
-if (a > b AND c > b)
+if (a > b0 AND c > b0)
 {
     write("a es mas grande que b y c es mas grande que b")
 }
 
 #+ Ejemplo OR +#
 variable1 := 3
-a := 1
-b := 1
+a := 1.0
+b0 := 1
 
-if (a > b OR c > b)
+if (a > b OR c > b0)
 {
     write("a es mas grande que b o c es mas grande que b")
 }
 
 #+ Ejemplo NOT +#
-a := 1
-b := 1
+a := 1.0
+b0 := 1
 
-if (NOT a > b)
+if (NOT a > b0)
 {
     write("a no es mas grande que b. check NOT")
 }
 
 #+ ciclo +#
-a := 1
-b := 3
+a := 1.0
+b0 := 3
 
-while (c > d)
+while (c > b0)
 {
     write("a es mas grande que b")
     c =: c + 1
@@ -79,20 +79,21 @@ write(variable1)  #+ var1 es una variable numerica definida previamente +#
 
 
 #+ Operaciones aritmeticas +#
-x =: 27 - c
-x =: r + 500
-x =: 34 * 3
-x =: z / f
-x =: r * j - 2
-
+x =: 27.0 - c
+#+ x =: r + 500.0 +#
+#+ x =: 34.0 * 3.0 +#
+#+ x =: z / f+#
+#+ x =: r * j - 2.0 +#
+r := 1
+j := 2
 
 #+ TEMA ESPECIAL REORDER +#
 
-reorder([x + 3, 1 + 1, 9 - x],true,2)  #+ la primer posicion es cero +#
-#+ [9-x, 1+1, x+3]  luego de reordenar +#
+reorder([x + 3.0, 1 + 1, 9.0 - x],true,2)  #+ la primer posicion es cero +#
+#+ [9.0-x, 1+1, x+3.0]  luego de reordenar +#
 
-reorder([r * j - 2, x + 3, 1 + 1, 9 - x], false,2)  #+ la primer posicion es cero +#
-#+ [r*j-2, x+3, 9-x, 1+1]  luego de reordenar +#
+reorder([r * j - 2, x + 3.0, 1 + 1, 9.0 - x], false,2)  #+ la primer posicion es cero +#
+#+ [r*j-2, x+3.0, 9-x.0, 1+1]  luego de reordenar +#
 
 #+ TEMA ESPECIAL NEGATIVECALCULATION +#
 a := 4.1

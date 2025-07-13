@@ -32,6 +32,9 @@ int contArgCALNEG=0;
 int primerNeg=0;
 int contarIngresos=0;
 int cont_fct_reord=0;
+
+float sumFloat=0.0;
+float multFloat=1.0;
 enum CLAUSE_LIST clauseType;
 
 int yyerror();
@@ -501,8 +504,9 @@ asignacion_negativeCalculation:
         insertar_en_polaca("contArgCALNEG");
         insertar_en_polaca("2");
         insertar_en_polaca("%");
-        insertar_en_polaca("contArgCALNEG");
+        insertar_en_polaca("aux"); //variable auxiliar para guardar el resultado del resto
         insertar_en_polaca("=");
+        insertar_en_polaca("aux"); 
         insertar_en_polaca("0");
         insertar_en_polaca("CMP");
         insertar_en_polaca("BNE");
@@ -510,7 +514,7 @@ asignacion_negativeCalculation:
         apilar_indice(tmpIndex2);
         avanzar_polaca();
 
-        //parte verdadera
+        //parte verdadera, si es par
         insertar_en_polaca("sumNeg");
         insertar_en_polaca($1);
         insertar_en_polaca("=");
@@ -523,7 +527,7 @@ asignacion_negativeCalculation:
         apilar_indice(tmpIndex2);
         avanzar_polaca();
 
-        //parte falsa
+        //parte falsa, si es impar
         insertar_en_polaca("multNeg");
         insertar_en_polaca($1);
         insertar_en_polaca("=");
@@ -536,68 +540,33 @@ asignacion_negativeCalculation:
 
 lista_params:
     lista_params COMA CTE_INTEGER 
-     {
-        if(atof($3)<0){
-            contArgCALNEG++;
-            insertar_NegCalc($3);
-
-            desapilar_indice(&tmpIndex);
-            int offset=posicion_polaca_actual();
-            actualizar_polaca(tmpIndex,0);
-        }
-     }
     | lista_params COMA CTE_FLOAT 
      {
         if(atof($3)<0){
-            contArgCALNEG++;
             insertar_NegCalc($3);
 
             desapilar_indice(&tmpIndex);
             int offset=posicion_polaca_actual();
             actualizar_polaca(tmpIndex,0);
-            //actualizar_polaca(tmpIndex,(tmpIndex-offset+1));
         }
-        /*if (verificar_y_contar_negs($3)) {
-            tmpIndex=posicion_polaca_actual();
-            if (primerNeg) {
-                apilar_indice(tmpIndex); 
-                avanzar_polaca();
-            } else {
-                primerNeg=1;
-            }
-        }*/
      }
     | lista_params COMA ID 
      {
-        char *value=buscar_en_polaca($3);
-        if(atof(value)<0){
-            contArgCALNEG++;
-        }
         insertar_en_polaca($3);
         insertar_en_polaca("0");
         insertar_en_polaca("CMP");
         insertar_en_polaca("BGE");
         tmpIndex2=posicion_polaca_actual();
         apilar_indice(tmpIndex2);
+        contArgCALNEG++;
         avanzar_polaca();
         
         insertar_NegCalc($3);
 
         desapilar_indice(&tmpIndex2);
-        actualizar_polaca(tmpIndex2, 0);//?*/
-        
-
+        actualizar_polaca(tmpIndex2, 0);
      }
     | CTE_INTEGER
-     {
-         if(atof($1)<0){
-            insertar_NegCalc($1);
-
-            desapilar_indice(&tmpIndex);
-            int offset=posicion_polaca_actual();
-            actualizar_polaca(tmpIndex,(tmpIndex-offset+1));
-        }
-     }
     | CTE_FLOAT
      { 
         if(atof($1)<0){
@@ -606,15 +575,10 @@ lista_params:
             desapilar_indice(&tmpIndex);
             int offset=posicion_polaca_actual();
             actualizar_polaca(tmpIndex,(tmpIndex-offset+1));
-            //apilar_indice(tmpIndex);
         }
      }
     | ID 
      {
-        char *value=buscar_en_polaca($1);
-        if(atof(value)<0){
-            contArgCALNEG++;
-        }
         insertar_en_polaca($1);
         insertar_en_polaca("0");
         insertar_en_polaca("CMP");
@@ -626,7 +590,7 @@ lista_params:
         insertar_NegCalc($1);
 
         desapilar_indice(&tmpIndex2);
-        actualizar_polaca(tmpIndex2, 0);//?*/
+        actualizar_polaca(tmpIndex2, 0);
         
      };
 
@@ -694,7 +658,7 @@ void insertar_NegCalc(char *value){ //inserto en polaca contArgCALNEG++, multNeg
     insertar_en_polaca("multNeg");
     insertar_en_polaca("=");
 
-    //contArgCALNEG++;
+    contArgCALNEG++;
     insertar_en_polaca("contArgCALNEG");
     insertar_en_polaca("1");
     insertar_en_polaca("+");
