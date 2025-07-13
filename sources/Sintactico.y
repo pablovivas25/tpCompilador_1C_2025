@@ -491,75 +491,7 @@ asignacion_operacion_aritmetica:
         free($3);
     };
 
-/*asignacion_negativeCalculation:
-    ID OP_AS_NEG_CALC NEGATIVECALCULATION 
-    { contArgCALNEG=0; primerNeg=0; insertar_en_polaca("NCALC"); }
-    PA lista_params PC 
-    {
-        const char* tipoID = getTipoDatoVariable(&listaTS, $1);
-        const char* tipoResultado = (contArgCALNEG % 2 == 0) ? "FLOAT" : "INTEGER";
 
-        char operador[2];
-        if (contArgCALNEG%2==0) {
-            strcpy(operador, "+");
-        } else {
-            strcpy(operador, "*");
-        }
-        contArgCALNEG--;
-        while(contArgCALNEG>0) {
-            desapilar_indice(&tmpIndex);
-            actualizar_elemento_en_polaca(tmpIndex, operador);
-            contArgCALNEG--;
-        }
-
-        if (!tipoID) {
-            printf("ERROR: Variable '%s' no fue declarada.\n", $1);
-            exit(1);
-        } else if (strcmp(tipoID, tipoResultado) != 0 && !(strcmp(tipoID, "FLOAT") == 0 && strcmp(tipoResultado, "INTEGER") == 0)) {
-            printf("ERROR: Tipos incompatibles: '%s' es %s y el resultado es %s\n", $1, tipoID, tipoResultado);
-            exit(1);
-        }
-
-        insertar_en_polaca($1);
-        insertar_en_polaca("=");
-        printf("Sintactico --> funcion negativeCalculation\n");
-    };
-
-
-    ID OP_AS_NEG_CALC NEGATIVECALCULATION 
-    { contArgCALNEG=0; }
-    PA lista_params PC 
-    {
-        const char* tipoID = getTipoDatoVariable(&listaTS, $1);
-        const char* tipoResultado = (contArgCALNEG % 2 == 0) ? "FLOAT" : "INTEGER";
-
-        char operador[2];
-        if (contArgCALNEG%2==0) {
-            strcpy(operador, "+");
-        } else {
-            strcpy(operador, "*");
-        }
-        contArgCALNEG--;
-        while(contArgCALNEG>0) {
-            desapilar_indice(&tmpIndex);
-            actualizar_elemento_en_polaca(tmpIndex, operador);
-            contArgCALNEG--;
-        }
-
-        if (!tipoID) {
-            printf("ERROR: Variable '%s' no fue declarada.\n", $1);
-            exit(1);
-        } else if (strcmp(tipoID, tipoResultado) != 0 && !(strcmp(tipoID, "FLOAT") == 0 && strcmp(tipoResultado, "INTEGER") == 0)) {
-            printf("ERROR: Tipos incompatibles: '%s' es %s y el resultado es %s\n", $1, tipoID, tipoResultado);
-            exit(1);
-        }
-
-        insertar_en_polaca($1);
-        insertar_en_polaca("=");
-        printf("Sintactico --> funcion negativeCalculation\n");
-    };
-
-*/
 asignacion_negativeCalculation:
     ID OP_AS_NEG_CALC NEGATIVECALCULATION 
     { contArgCALNEG=0; primerNeg=0; insertar_en_polaca("0");insertar_en_polaca("sumaNeg");insertar_en_polaca("=");insertar_en_polaca("0");insertar_en_polaca("contArgCALNEG");insertar_en_polaca("=");insertar_en_polaca("1");insertar_en_polaca("multNeg");insertar_en_polaca("="); insertar_en_polaca("NCALC");}
@@ -698,48 +630,7 @@ lista_params:
         
      };
 
-/*lista_params:
-    lista_params COMA CTE_INTEGER 
-    | lista_params COMA CTE_FLOAT 
-    {
-        if (verificar_y_contar_negs($3)) {
-            tmpIndex=posicion_polaca_actual();
-            if (primerNeg) {
-                apilar_indice(tmpIndex); 
-                avanzar_polaca();
-            } else {
-                primerNeg=1;
-            }
-        }
-    }
-    | lista_params COMA ID 
-    {
-        char *value=buscar_en_polaca($3);
-        if (verificar_y_contar_negs(value)) {
-            tmpIndex=posicion_polaca_actual();
-            if (primerNeg) {
-                apilar_indice(tmpIndex); 
-                avanzar_polaca();
-            } else {
-                primerNeg=1;
-            }
-        }
-    }
-    | CTE_INTEGER
-    | CTE_FLOAT 
-    { 
-        if(verificar_y_contar_negs($1)) {
-            primerNeg=1;
-        } 
-    }
-    | ID 
-    {
-        char *value=buscar_en_polaca($1);
-        if(verificar_y_contar_negs(value)) {
-            primerNeg=1;
-        }
-    };
-*/
+
 funcion_reorder:     
     REORDER PA 
     {
