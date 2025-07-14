@@ -10,12 +10,12 @@
 #include "./funciones/AssemblerUtils.h"
 #define ASM_ACTIVE
 
-enum CLAUSE_LIST {
+typedef enum {
     IF_CLAUSE,
     WHILE_CLAUSE,
     NOT_CONDITION,
     OR_CONDITION
-};
+} CLAUSE_LIST;
 
 int yystopparser=0;
 FILE  *yyin;
@@ -32,7 +32,7 @@ int contArgCALNEG=0;
 int primerNeg=0;
 int contarIngresos=0;
 int cont_fct_reord=0;
-enum CLAUSE_LIST clauseType;
+CLAUSE_LIST clauseType;
 
 int yyerror();
 int yylex();    

@@ -142,6 +142,7 @@ const char* getTipoDatoVariable(tList *p, const char* nombreVar) {
         }
         p = &(*p)->next;
     }
+    printf("No se encontró en tabla de Simbolo %s\n", nombreVar);
     return NULL; // no encontrado
 }
 
@@ -165,6 +166,7 @@ char* get_type_in_ts(tList *p, const char* nombreVar) {
         }
         p = &(*p)->next;
     }
+    printf("No se encontró en tabla de Simbolo %s\n", nombreVar);
     return NULL; // no encontrado
 }
 

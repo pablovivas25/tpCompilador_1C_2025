@@ -7,3 +7,5 @@
 /sources/asm/*.obj
 /sources/asm/*.exe
 /sources/asm/*.map
+
+.vscode/

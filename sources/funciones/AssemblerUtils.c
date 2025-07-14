@@ -445,7 +445,7 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
                     fprintf(archivo, "\tDisplayInteger @usr_%s\n\tnewLine 1\n",priOp);	// standardize var.
 				} else {
                     fprintf(archivo, "\tdisplayString %s\n\tnewLine 1\n",estandarizar_nombre_ensamblador(priOp, get_std_type(get_type_in_ts(tmpTS,priOp))));	// standardize var.
-				}
+                }
 
 			} else if (strcmp(polaca[i], "CMP")==0) {
 			    segOp=pop(&pilaASM);
@@ -472,7 +472,7 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
 				segOp=pop(&pilaASM);
 				fprintf(archivo, "\t%s\n",priOp);
 			}
-            fflush(archivo);
+            
         } else if (strcmp(polaca[i], "BI")==0) {
 			i++;
 			fprintf(archivo, "\tJMP TAG_%s\n",polaca[i]);
@@ -486,6 +486,7 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
         } else {
             push(&pilaASM, polaca[i]);
         }
+        fflush(archivo);
     }
     if (salto==i) {
         fprintf(archivo, "TAG_%d:\n",i);
