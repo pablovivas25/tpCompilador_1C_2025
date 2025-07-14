@@ -8,7 +8,7 @@
 #include "./funciones/pila.c"
 #include "./funciones/RPN.c"
 #include "./funciones/AssemblerUtils.h"
-//#define ASM_ACTIVE
+#define ASM_ACTIVE
 
 typedef enum {
     IF_CLAUSE,
@@ -496,23 +496,26 @@ asignacion_negativeCalculation:
     ID OP_AS_NEG_CALC NEGATIVECALCULATION 
     { 
         contArgCALNEG=0; 
+        insertNumber(&listaTS,"0.0");
+        insertNumber(&listaTS,"1.0");
+        insertNumber(&listaTS,"2.0");
         insertar_en_polaca("NCALC");
-        insertar_en_polaca("0");
+        insertar_en_polaca("0.0");
         insertar_en_polaca("@sumaNeg");
-        insertar_en_polaca("=");
-        insertar_en_polaca("0");
-        insertar_en_polaca("@contArgCALNEG");insertar_en_polaca("=");
-        insertar_en_polaca("1");insertar_en_polaca("@multNeg");insertar_en_polaca("="); }
+        insertar_en_polaca("=:");
+        insertar_en_polaca("0.0");
+        insertar_en_polaca("@contArgCALNEG");insertar_en_polaca("=:");
+        insertar_en_polaca("1.0");insertar_en_polaca("@multNeg");insertar_en_polaca("=:"); }
     PA lista_params PC 
     { 
         //if (@contArgCALNEG%2==0)
         insertar_en_polaca("@contArgCALNEG");
-        insertar_en_polaca("2");
+        insertar_en_polaca("2.0");
         insertar_en_polaca("%");
         insertar_en_polaca("@aux"); //variable auxiliar para guardar el resultado del resto
-        insertar_en_polaca("=");
+        insertar_en_polaca("=:");
         insertar_en_polaca("@aux"); 
-        insertar_en_polaca("0");
+        insertar_en_polaca("0.0");
         insertar_en_polaca("CMP");
         insertar_en_polaca("BNE");
         tmpIndex=posicion_polaca_actual();
@@ -522,7 +525,7 @@ asignacion_negativeCalculation:
         //parte verdadera, si es par
         insertar_en_polaca("@sumNeg");
         insertar_en_polaca($1);
-        insertar_en_polaca("=");
+        insertar_en_polaca("=:");
 
         //BI
         insertar_en_polaca("BI"); 
@@ -535,7 +538,7 @@ asignacion_negativeCalculation:
         //parte falsa, si es impar
         insertar_en_polaca("@multNeg");
         insertar_en_polaca($1);
-        insertar_en_polaca("=");
+        insertar_en_polaca("=:");
         desapilar_indice(&tmpIndex);
         actualizar_polaca(tmpIndex, 0);
 
@@ -547,6 +550,7 @@ lista_params:
     lista_params COMA CTE_INTEGER 
     | lista_params COMA CTE_FLOAT 
      {
+        insertNumber(&listaTS,$3);
         if(atof($3)<0){
             insertar_NegCalc($3);
         }
@@ -554,7 +558,7 @@ lista_params:
     | lista_params COMA ID 
      {
         insertar_en_polaca($3);
-        insertar_en_polaca("0");
+        insertar_en_polaca("0.0");
         insertar_en_polaca("CMP");
         insertar_en_polaca("BGE");
         tmpIndex2=posicion_polaca_actual();
@@ -570,6 +574,7 @@ lista_params:
     | CTE_INTEGER
     | CTE_FLOAT
      { 
+        insertNumber(&listaTS,$1);
         if(atof($1)<0){
             insertar_NegCalc($1);
         }
@@ -577,7 +582,7 @@ lista_params:
     | ID 
      {
         insertar_en_polaca($1);
-        insertar_en_polaca("0");
+        insertar_en_polaca("0.0");
         insertar_en_polaca("CMP");
         insertar_en_polaca("BGE");
         tmpIndex2=posicion_polaca_actual();
@@ -645,20 +650,20 @@ void insertar_NegCalc(char *value){ //inserto en polaca @contArgCALNEG++, multNe
     insertar_en_polaca("@sumaNeg");
     insertar_en_polaca("+");
     insertar_en_polaca("@sumaNeg");
-    insertar_en_polaca("=");
+    insertar_en_polaca("=:");
 
     insertar_en_polaca(value);
     insertar_en_polaca("@multNeg");
     insertar_en_polaca("*");
     insertar_en_polaca("@multNeg");
-    insertar_en_polaca("=");
+    insertar_en_polaca("=:");
 
     contArgCALNEG++;
     insertar_en_polaca("@contArgCALNEG");
-    insertar_en_polaca("1");
+    insertar_en_polaca("1.0");
     insertar_en_polaca("+");
     insertar_en_polaca("@contArgCALNEG");
-    insertar_en_polaca("=");
+    insertar_en_polaca("=:");
 }
 
 int main(int argc, char *argv[])

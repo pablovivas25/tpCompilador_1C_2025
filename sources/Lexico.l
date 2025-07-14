@@ -7,7 +7,7 @@
 #include "y.tab.h"
 
 #define MAX_NUM_16_BITS 65536
-#define MAX_CHARACTERS  100
+#define MAX_CHARACTERS  50
 #define LIMIT_FLOAT_INF (-FLT_MAX)
 #define LIMIT_FLOAT_SUP (FLT_MAX)
 #define LIMIT_FLOAT_MIN (FLT_MIN)
@@ -26,7 +26,7 @@ DIGITO			[0-9]
 LETRA			[a-zA-Z]
 BOOL            "true"|"false"
 CTE_INTEGER		-?{DIGITO}+
-CARACTER        [a-z|A-Z|0-9|=|OP_MAY|OP_MEN|!|:|'|"|+|\-|*|/|@|.|%|?]
+CARACTER        [a-z|A-Z|0-9|=|>|<|!|:|'|"|+|\-|*|/|@|.|%|?]
 CTE_FLOAT       -?({DIGITO}+"."{DIGITO}+|{DIGITO}+"."|"."{DIGITO}+)
 CTE_STRING      {COMILLA}({CARACTER}+|" ")*{COMILLA}
 ID			    {LETRA}({LETRA}|{DIGITO})*

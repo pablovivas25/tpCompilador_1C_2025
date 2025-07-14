@@ -9,37 +9,32 @@ MAXTEXTSIZE equ 50
 
 .DATA
 ; definicion de constantes float y enteras
-	_int_1                             	DD	1.0
-	_int_2                             	DD	2.0
-	_int_3                             	DD	3.0
-	_int_9                             	DD	9.0
+	_float_n_1_5                       	DD	-1.5
+	_float_n_2_0                       	DD	-2.0
+	_float_n_3_0                       	DD	-3.0
+	_float_p_0_0                       	DD	0.0
+	_float_p_1_0                       	DD	1.0
+	_float_p_2_0                       	DD	2.0
+	_float_p_3_5                       	DD	3.5
+	_float_p_4_1                       	DD	4.1
 
 ; definicion de constantes string
 
-	@sys_RORD_0                        	DB	"[9-x,x+3,1+1]",'$'
-	@sys_RORD_13                       	DB	"[x+3,1+1,9-x]",'$'
-	@sys_RORD_26                       	DB	"[1+1,x+3,9-x]",'$'
-	@sys_RORD_39                       	DB	"[r*j-2,+3,-x,+1]",'$'
-	@sys_RORD_58                       	DB	"[r*j-2,+3,+1,-x]",'$'
-	@sys_RORD_77                       	DB	"[x+3,1+1,9-x,r*j-2]",'$'
 
 ; definicion de variables
 	@usr_a                             	DD  ?
 	@usr_a1                            	DD  ?
-	@usr_b                             	DB	MAXTEXTSIZE dup (?),'$'
+	@usr_b                             	DD  ?
 	@usr_b1                            	DD  ?
 	@usr_c                             	DD  ?
-	@usr_d                             	DD  ?
-	@usr_f                             	DD  ?
-	@usr_j                             	DD  ?
-	@usr_p1                            	DB	MAXTEXTSIZE dup (?),'$'
-	@usr_p2                            	DB	MAXTEXTSIZE dup (?),'$'
-	@usr_p3                            	DB	MAXTEXTSIZE dup (?),'$'
-	@usr_r                             	DD  ?
-	@usr_variable1                     	DD  ?
 	@usr_x                             	DD  ?
-	@usr_x1                            	DD  ?
-	@usr_z                             	DD  ?
+
+; definicion de variables NCALC
+	@aux                               	DD  ?
+	@sumaNeg                           	DD  ?
+	@multNeg                           	DD  ?
+	@contArgCALNEG                     	DD  ?
+
 
 .CODE
 START:
@@ -47,18 +42,100 @@ START:
 	MOV DS,AX
 	MOV ES,AX
 	FINIT; Inicializa el coprocesador
-	displayString @sys_RORD_0
-	newLine 1
-	displayString @sys_RORD_13
-	newLine 1
-	displayString @sys_RORD_26
-	newLine 1
-	displayString @sys_RORD_39
-	newLine 1
-	displayString @sys_RORD_58
-	newLine 1
-	displayString @sys_RORD_77
-	newLine 1
+	FLD _float_p_4_1
+	FSTP @usr_a
+	FLD _float_n_1_5
+	FSTP @usr_b
+TAG_
+	FLD _float_p_0_0
+	FSTP @sumaNeg
+	FLD _float_p_0_0
+	FSTP @contArgCALNEG
+	FLD _float_p_1_0
+	FSTP @multNeg
+	FLD _float_n_2_0
+	FLD @sumaNeg
+	FADD
+	FSTP @sumaNeg
+	FLD _float_n_2_0
+	FLD @multNeg
+	FMUL
+	FSTP @multNeg
+	FLD @contArgCALNEG
+	FLD _float_p_1_0
+	FADD
+	FSTP @contArgCALNEG
+	FLD @usr_a
+	FLD _float_p_0_0
+	FXCH
+	FCOM
+	FSTSW AX
+	SAHF
+	JAE TAG_51
+	FLD @usr_a
+	FLD @sumaNeg
+	FADD
+	FSTP @sumaNeg
+	FLD @usr_a
+	FLD @multNeg
+	FMUL
+	FSTP @multNeg
+	FLD @contArgCALNEG
+	FLD _float_p_1_0
+	FADD
+	FSTP @contArgCALNEG
+TAG_51:
+	FLD @usr_b
+	FLD _float_p_0_0
+	FXCH
+	FCOM
+	FSTSW AX
+	SAHF
+	JAE TAG_71
+	FLD @usr_b
+	FLD @sumaNeg
+	FADD
+	FSTP @sumaNeg
+	FLD @usr_b
+	FLD @multNeg
+	FMUL
+	FSTP @multNeg
+	FLD @contArgCALNEG
+	FLD _float_p_1_0
+	FADD
+	FSTP @contArgCALNEG
+TAG_71:
+	FLD _float_n_3_0
+	FLD @sumaNeg
+	FADD
+	FSTP @sumaNeg
+	FLD _float_n_3_0
+	FLD @multNeg
+	FMUL
+	FSTP @multNeg
+	FLD @contArgCALNEG
+	FLD _float_p_1_0
+	FADD
+	FSTP @contArgCALNEG
+	FLD @contArgCALNEG
+	FLD _float_p_2_0
+	FXCH ST(1)
+	FPREM
+	FSTP @aux
+	FLD @aux
+	FLD _float_p_0_0
+	FXCH
+	FCOM
+	FSTSW AX
+	SAHF
+	JNE TAG_101
+	FSTP @sumNeg
+	FSTP @usr_x
+	JMP TAG_104
+TAG_101:
+	FSTP @multNeg
+	FSTP @usr_x
+TAG_104:
 
 FINAL:
 	MOV ah, 1 ; pausa, espera que oprima una tecla

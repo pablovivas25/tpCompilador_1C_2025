@@ -71,9 +71,9 @@ char* estandarizar_nombre_ensamblador(const char* nombre_original, VariableType 
     // Longitud original + posible prefijo (_int_, _float_) + posible '_' + '\0'
     size_t prefijo_len = 0;
     if (tipo == TYPE_INT) {
-        prefijo_len = strlen("_int_");
+        prefijo_len = strlen("_int_s_");
     } else if (tipo == TYPE_FLOAT) {
-        prefijo_len = strlen("_float_");
+        prefijo_len = strlen("_float_s_");
     }
 
     // Un tamaño generoso para la mayoría de los casos de estandarización.
@@ -88,12 +88,22 @@ char* estandarizar_nombre_ensamblador(const char* nombre_original, VariableType 
 
     // --- Agregar prefijo basado en el tipo (solo INT y FLOAT aquí) ---
     if (tipo == TYPE_INT) {
-        strcpy(&nombre_estandarizado[j], "_int_");
-        j += strlen("_int_");
+        if (nombre_original[0]!='-') {
+            strcpy(&nombre_estandarizado[j], "_int_p_");
+        } else {
+            strcpy(&nombre_estandarizado[j], "_int_n_");
+        }
+        
+        j += strlen("_int_s_");
     } else if (tipo == TYPE_FLOAT) {
-        strcpy(&nombre_estandarizado[j], "_float_");
-        j += strlen("_float_");
+        if (nombre_original[0]!='-') {
+            strcpy(&nombre_estandarizado[j], "_float_p_");
+        } else {
+            strcpy(&nombre_estandarizado[j], "_float_n_");
+        }
+        j += strlen("_float_s_");
     }
+    
 
     // --- Lógica de estandarización de caracteres ---
     int i = 0;
@@ -170,11 +180,15 @@ int es_operador(char* elemento) {
 		return 4;
 	} else if (strcmp(elemento, "=:")==0) {
 		return 5;
+	} else if (strcmp(elemento, "%")==0) {
+        return 6;
+	} else if (strcmp(elemento, "read")==0) {
+        return 7;
 	} else if (strcmp(elemento, "write")==0) {
-        return 6;
+        return 8;
 	} else if (strcmp(elemento, "CMP")==0) {
-        return 6;
-	}
+        return 9;
+	} 
 	return 0;
 }
 
@@ -207,8 +221,10 @@ char* get_jump(char* operador) {
 }
 
 void agregar_operando(FILE* archivo, tList *ptrTS, const char* operando) {
-    if (startsWith(get_type_in_ts(ptrTS,operando), "CTE_")==0) { //FALSO
+    if (operando[0]!='@' && startsWith(get_type_in_ts(ptrTS,operando), "CTE_")==0) { //FALSO
         fprintf(archivo, "\tFLD @usr_%s\n",operando);
+    } else if (operando[0]=='@') { //FALSO
+        fprintf(archivo, "\tFLD %s\n",operando);
     } else {
         fprintf(archivo, "\tFLD %s\n",estandarizar_nombre_ensamblador(operando, get_std_type(get_type_in_ts(ptrTS,operando))));
     }
@@ -370,6 +386,15 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
         }
         tmpTS = &(*tmpTS)->next;
     }
+    fprintf(archivo, "\n");
+
+    /** Variables para 'NCALC': @aux, @sumaNeg, @multNeg, @contArgCALNEG */
+    fprintf(archivo, "; definicion de variables NCALC\n");
+    fprintf(archivo, "\t%-35s\tDD  ?\n", "@aux");
+    fprintf(archivo, "\t%-35s\tDD  ?\n", "@sumaNeg");
+    fprintf(archivo, "\t%-35s\tDD  ?\n", "@multNeg");
+    fprintf(archivo, "\t%-35s\tDD  ?\n", "@contArgCALNEG");
+    fprintf(archivo, "\n");
 
     /** Empezar a trabajar sobre la polaca */
     fprintf(archivo, "\n.CODE\n");
@@ -394,7 +419,7 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
 			if (codeOperador == 5) { // operador de asignación '=:'
 				priOp=pop(&pilaASM);
 				segOp=pop(&pilaASM);
-				if (strcmp(get_type_in_ts(tmpTS,priOp), "STRING")==0) {
+                if (priOp[0]!='@' && strcmp(get_type_in_ts(tmpTS,priOp), "STRING")==0) {
                     /** Forma de asignar una constante a una variabla
                       * assignToString _cte_str, @usr_b, s@_cte_str: macro en macros2.asm
                       * _cte_str: constante declarada en el espacio de datos
@@ -404,14 +429,27 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
                     fprintf(archivo, "\tassignToString %s, @usr_%s, s@%s\n",tmpVar,priOp,tmpVar);
 				} else {
 				    if (strcmp(segOp, "@tmp")==0) {
-                        fprintf(archivo, "\tFSTP @usr_%s\n",priOp);
+                        if (priOp[0]!='@') {
+                            fprintf(archivo, "\tFSTP @usr_%s\n",priOp);
+                        } else {
+                            fprintf(archivo, "\tFSTP %s\n",priOp);
+                        }
+                        
+				    } else if (priOp[0]=='@') {
+                        fprintf(archivo, "\tFLD %s\n",estandarizar_nombre_ensamblador(segOp,TYPE_FLOAT));
+                        fprintf(archivo, "\tFSTP %s\n",priOp);
 				    } else {
-                        fprintf(archivo, "\tFLD %s\n",estandarizar_nombre_ensamblador(segOp,get_std_type(get_type_in_ts(tmpTS,segOp))));
+                        //printf("valor extraido %s %s", priOp, segOp);
+                        if (segOp[0]=='@') {
+                            fprintf(archivo, "\tFSTP %s\n",segOp);
+                        } else {
+                            fprintf(archivo, "\tFLD %s\n",estandarizar_nombre_ensamblador(segOp,get_std_type(get_type_in_ts(tmpTS,segOp))));
+                        }
                         fprintf(archivo, "\tFSTP @usr_%s\n",priOp);
                         // fprintf(archivo, "\tFFREE\n"); // no es necesario
 				    }
 				}
-			} else if (codeOperador>=1&&codeOperador<=4) { // si son los operadores '+', '-', '*' y '/'
+			} else if ((codeOperador>=1&&codeOperador<=4)||codeOperador==6) { // si son los operadores '+', '-', '*' y '/'
 			    segOp=pop(&pilaASM);
 			    priOp=pop(&pilaASM);
 			    if (strcmp(priOp, "@tmp")==0) {
@@ -420,6 +458,7 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
 			    } else {
                     //fprintf(archivo, "\tFLD @usr_%s\n",priOp);
                     //fprintf(archivo, "\tFLD @usr_%s\n",segOp);
+                    printf(" --> chequeando aqui %s, %s\n", priOp, segOp);
                     agregar_operando(archivo, tmpTS, priOp);
                     agregar_operando(archivo, tmpTS, segOp);
 			    }
@@ -428,6 +467,8 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
                     case 2: fprintf(archivo, "\tFSUB\n"); break;
                     case 3: fprintf(archivo, "\tFMUL\n"); break;
                     case 4: fprintf(archivo, "\tFDIV\n"); break;
+                    case 6: fprintf(archivo, "\tFXCH ST(1)\n"); 
+                            fprintf(archivo, "\tFPREM\n"); break;
                     default:
                         printf("operación desconocida!");
                         exit(1);
@@ -483,6 +524,10 @@ int generar_assembler(tList *ptrTS, char **polaca, int rpn_size) {
         } else if (strcmp(polaca[i], "RORD")==0) {
             fprintf(archivo, "\tdisplayString @sys_RORD_%d\n\tnewLine 1\n",i);
             for(;strcmp(polaca[i],"f@end")!=0;i++) ;
+        } else if (strcmp(polaca[i], "NCALC")==0) {
+            printf(" ----> NCALC\n");
+            // fprintf(archivo, "TAG_%d:\n",i);
+            fprintf(archivo, "TAG_\n");
         } else {
             push(&pilaASM, polaca[i]);
         }
