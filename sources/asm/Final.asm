@@ -9,20 +9,20 @@ MAXTEXTSIZE equ 50
 
 .DATA
 ; definicion de constantes float y enteras
-	_float_9999                        	DD	.9999
-	_int_1                             	DD	1.0
-	_int_10                            	DD	10.0
-	_int_2                             	DD	2.0
-	_float_2                           	DD	2.
-	_float_2_5                         	DD	2.5
-	_int_27                            	DD	27.0
-	_int_3                             	DD	3.0
-	_int_34                            	DD	34.0
-	_int_5                             	DD	5.0
-	_int_500                           	DD	500.0
-	_float_6_0                         	DD	6.0
-	_int_9                             	DD	9.0
-	_float_99999_99                    	DD	99999.99
+	_float_p_9999                      	DD	.9999
+	_int_p_1                           	DD	1.0
+	_int_p_10                          	DD	10.0
+	_int_p_2                           	DD	2.0
+	_float_p_2                         	DD	2.
+	_float_p_2_5                       	DD	2.5
+	_int_p_27                          	DD	27.0
+	_int_p_3                           	DD	3.0
+	_int_p_34                          	DD	34.0
+	_int_p_5                           	DD	5.0
+	_int_p_500                         	DD	500.0
+	_float_p_6_0                       	DD	6.0
+	_int_p_9                           	DD	9.0
+	_float_p_99999_99                  	DD	99999.99
 
 ; definicion de constantes string
 	_strh_3f6361cc                     	DB  "@sdADaSjfla%dfg",'$'
@@ -70,15 +70,15 @@ START:
 	MOV DS,AX
 	MOV ES,AX
 	FINIT; Inicializa el coprocesador
-	FLD _float_99999_99
+	FLD _float_p_99999_99
 	FSTP @usr_a
-	FLD _float_2
+	FLD _float_p_2
 	FSTP @usr_a
-	FLD _float_9999
+	FLD _float_p_9999
 	FSTP @usr_a1
-	FLD _float_6_0
+	FLD _float_p_6_0
 	FSTP @usr_b1
-	FLD _int_1
+	FLD _int_p_1
 	FLD @usr_b1
 	FMUL
 	FLD @usr_a
@@ -86,9 +86,9 @@ START:
 	FSTP @usr_x1
 	DisplayFloat @usr_x1,2
 	newLine 1
-	FLD _float_2_5
+	FLD _float_p_2_5
 	FSTP @usr_b1
-	FLD _int_10
+	FLD _int_p_10
 	FLD @usr_b1
 	FDIV
 	FLD @usr_a
@@ -112,11 +112,11 @@ TAG_48:
 	displayString _strh_357861d
 	newLine 1
 TAG_50:
-	FLD _int_5
+	FLD _int_p_5
 	FSTP @usr_variable1
-	FLD _int_1
+	FLD _int_p_1
 	FSTP @usr_d
-	FLD _int_2
+	FLD _int_p_2
 	FSTP @usr_c
 	FLD @usr_variable1
 	FLD @usr_d
@@ -135,11 +135,11 @@ TAG_50:
 	displayString _strh_ed4c6100
 	newLine 1
 TAG_71:
-	FLD _int_3
+	FLD _int_p_3
 	FSTP @usr_variable1
-	FLD _int_1
+	FLD _int_p_1
 	FSTP @usr_d
-	FLD _int_2
+	FLD _int_p_2
 	FSTP @usr_c
 	FLD @usr_variable1
 	FLD @usr_d
@@ -159,9 +159,9 @@ TAG_85:
 	displayString _strh_b2ba1036
 	newLine 1
 TAG_92:
-	FLD _int_1
+	FLD _int_p_1
 	FSTP @usr_d
-	FLD _int_2
+	FLD _int_p_2
 	FSTP @usr_c
 	FLD @usr_d
 	FLD @usr_c
@@ -173,9 +173,9 @@ TAG_92:
 	displayString _strh_a17ac89f
 	newLine 1
 TAG_105:
-	FLD _int_1
+	FLD _int_p_1
 	FSTP @usr_c
-	FLD _int_3
+	FLD _int_p_3
 	FSTP @usr_d
 TAG_111:
 	FLD @usr_c
@@ -188,7 +188,7 @@ TAG_111:
 	displayString _strh_e04b63a7
 	newLine 1
 	FLD @usr_c
-	FLD _int_1
+	FLD _int_p_1
 	FADD
 	FSTP @usr_c
 	JMP TAG_111
@@ -197,16 +197,16 @@ TAG_126:
 	newLine 1
 	DisplayInteger @usr_variable1
 	newLine 1
-	FLD _int_27
+	FLD _int_p_27
 	FLD @usr_c
 	FSUB
 	FSTP @usr_x
 	FLD @usr_r
-	FLD _int_500
+	FLD _int_p_500
 	FADD
 	FSTP @usr_x
-	FLD _int_34
-	FLD _int_3
+	FLD _int_p_34
+	FLD _int_p_3
 	FMUL
 	FSTP @usr_x
 	FLD @usr_z
@@ -216,7 +216,7 @@ TAG_126:
 	FLD @usr_r
 	FLD @usr_j
 	FMUL
-	FLD _int_2
+	FLD _int_p_2
 	FSUB
 	FSTP @usr_x
 	displayString @sys_RORD_159

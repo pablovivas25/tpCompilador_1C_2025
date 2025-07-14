@@ -71,9 +71,9 @@ char* estandarizar_nombre_ensamblador(const char* nombre_original, VariableType 
     // Longitud original + posible prefijo (_int_, _float_) + posible '_' + '\0'
     size_t prefijo_len = 0;
     if (tipo == TYPE_INT) {
-        prefijo_len = strlen("_int_");
+        prefijo_len = strlen("_int_s_");
     } else if (tipo == TYPE_FLOAT) {
-        prefijo_len = strlen("_float_");
+        prefijo_len = strlen("_float_s_");
     }
 
     // Un tamaño generoso para la mayoría de los casos de estandarización.
@@ -88,12 +88,22 @@ char* estandarizar_nombre_ensamblador(const char* nombre_original, VariableType 
 
     // --- Agregar prefijo basado en el tipo (solo INT y FLOAT aquí) ---
     if (tipo == TYPE_INT) {
-        strcpy(&nombre_estandarizado[j], "_int_");
-        j += strlen("_int_");
+        if (nombre_original[0]!='-') {
+            strcpy(&nombre_estandarizado[j], "_int_p_");
+        } else {
+            strcpy(&nombre_estandarizado[j], "_int_n_");
+        }
+        
+        j += strlen("_int_s_");
     } else if (tipo == TYPE_FLOAT) {
-        strcpy(&nombre_estandarizado[j], "_float_");
-        j += strlen("_float_");
+        if (nombre_original[0]!='-') {
+            strcpy(&nombre_estandarizado[j], "_float_p_");
+        } else {
+            strcpy(&nombre_estandarizado[j], "_float_n_");
+        }
+        j += strlen("_float_s_");
     }
+    
 
     // --- Lógica de estandarización de caracteres ---
     int i = 0;
